@@ -8,26 +8,26 @@ The whole MVU character card is embedded as one JSON object in a backtick templa
 
 **Total:** 77 files
 
-## gui — 19 file(s), 492,950 bytes
+## gui — 19 file(s), 492,719 bytes
 
 | file | bytes | scriptName | replaces (findRegex) |
 |---|--:|---|---|
 | `gui/stripstatmenuonstart.txt` | 2 | StripStatMenuOnStart | `(<GameStartMenu\s*/>\s*)<StatusPlaceHolderImpl\s` |
 | `gui/rpg-gamestartmenu.html` | 32,983 | [RPG] GameStartMenu | `<GameStartMenu/>` |
 | `gui/love-gamestartmenu.html` | 18,051 | [Love] GameStartMenu | `<GameStartMenu/>` |
-| `gui/hidefirstfloor.txt` | 21 | HideFirstFloor | `/^[\s\S]*?<GameStartMenu\/>[\s\S]*/g` |
-| `gui/hide-far-chat.txt` | 21 | Hide Far Chat | `/.*/s` |
-| `gui/hideupdatevar.txt` | 21 | HideUpdateVar | `/<UpdateVariable>[\s\S]*?</UpdateVariable>/gm` |
+| `gui/hidefirstfloor.txt` | 0 | HideFirstFloor | `/^[\s\S]*?<GameStartMenu\/>[\s\S]*/g` |
+| `gui/hide-far-chat.txt` | 0 | Hide Far Chat | `/.*/s` |
+| `gui/hideupdatevar.txt` | 0 | HideUpdateVar | `/<UpdateVariable>[\s\S]*?</UpdateVariable>/gm` |
 | `gui/minimizeupdatevar.txt` | 553 | MinimizeUpdateVar | `/<UpdateVariable>([\s\S]*?)<\/UpdateVariable>/gm` |
-| `gui/hidecombatcalc.txt` | 21 | HideCombatCalc | `/<combat_calculation>[\s\S]*?</combat_calculatio` |
-| `gui/hidestarttext.txt` | 21 | HideStartText | `/^[\s\S]*?<GameStartMenu\/>\s*/g` |
-| `gui/hideuserinput.txt` | 21 | HideUserInput | `/.*/s` |
-| `gui/hidestoryanalysis.txt` | 21 | HideStoryAnalysis | `/<StoryAnalysis>[\s\S]*?</StoryAnalysis>/gm` |
-| `gui/hideupdateanalysis.txt` | 21 | HideUpdateAnalysis | `/<UpdateAnalysis>[\s\S]*?</UpdateAnalysis>/gm` |
-| `gui/hidethinking.txt` | 21 | HideThinking | `/^.*?</thinking>/s` |
+| `gui/hidecombatcalc.txt` | 0 | HideCombatCalc | `/<combat_calculation>[\s\S]*?</combat_calculatio` |
+| `gui/hidestarttext.txt` | 0 | HideStartText | `/^[\s\S]*?<GameStartMenu\/>\s*/g` |
+| `gui/hideuserinput.txt` | 0 | HideUserInput | `/.*/s` |
+| `gui/hidestoryanalysis.txt` | 0 | HideStoryAnalysis | `/<StoryAnalysis>[\s\S]*?</StoryAnalysis>/gm` |
+| `gui/hideupdateanalysis.txt` | 0 | HideUpdateAnalysis | `/<UpdateAnalysis>[\s\S]*?</UpdateAnalysis>/gm` |
+| `gui/hidethinking.txt` | 0 | HideThinking | `/^.*?</thinking>/s` |
 | `gui/minimizecombatlog.txt` | 549 | MinimizeCombatLog | `/<combat_log>\s*([\s\S]*?\S[\s\S]*?)<\/combat_lo` |
-| `gui/hide-combatlog.txt` | 21 | Hide CombatLog | `/<combat_log>[\s\S]*?</combat_log>/gm` |
-| `gui/hide-scratchpad.txt` | 21 | Hide Scratchpad | `/<([a-zA-Z0-9_]+_scratch_check)>[\s\S]*?<\/\1>\s` |
+| `gui/hide-combatlog.txt` | 0 | Hide CombatLog | `/<combat_log>[\s\S]*?</combat_log>/gm` |
+| `gui/hide-scratchpad.txt` | 0 | Hide Scratchpad | `/<([a-zA-Z0-9_]+_scratch_check)>[\s\S]*?<\/\1>\s` |
 | `gui/rpg-statusmenu.html` | 212,222 | [RPG] StatusMenu | `<StatusPlaceHolderImpl/>` |
 | `gui/love-statusmenu.html` | 202,092 | [Love] StatusMenu | `<StatusPlaceHolderImpl/>` |
 | `gui/rpg-leveluppanel.html` | 26,267 | [RPG] LevelUpPanel | `<LevelUpPanel\/>(?![\s\S]*<LevelUpPanel\/>)` |
