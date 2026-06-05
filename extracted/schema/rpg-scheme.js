@@ -65,6 +65,9 @@ const worldSchema = z
     Time: labeledStr,
     Location: labeledStr,
     Weather: labeledStr,
+    // Stage 1c: scene mode set by the AI each reply (exploration|combat|dialogue|shop|town).
+    // Used to gate combat-only rule entries; defaults to exploration (combat rules stay on).
+    Mode: labeledStr,
   })
   .prefault({});
 

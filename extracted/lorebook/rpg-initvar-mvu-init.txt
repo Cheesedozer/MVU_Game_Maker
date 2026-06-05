@@ -21,6 +21,10 @@
     "Weather": [
       "Clear",
       "Weather"
+    ],
+    "Mode": [
+      "exploration",
+      "Mode"
     ]
   },
   "Mainchar": {

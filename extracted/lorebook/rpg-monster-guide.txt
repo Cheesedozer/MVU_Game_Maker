@@ -1,3 +1,5 @@
+<%# Stage 1c gate: render combat-only rules unless the scene is a known-safe mode (safe-degrading; injects when state unreadable). %>
+<% let _m; try { _m = getvar("stat_data.World.Mode", { scope: "message" }); } catch (e) { _m = undefined; } if (Array.isArray(_m)) _m = _m[0]; const _safeMode = (typeof _m === "string") && ["dialogue","shop","town","safe","social","rest"].includes(_m.trim().toLowerCase()); if (getvar("mvu_panic_all_constant") === true || !_safeMode) { %>
 <monster_guide>
   Version 2.6
   Purpose: Fast, reliable monster generation with clear formulas and strict pacing.
@@ -101,3 +103,4 @@
     - Boss = 4–8 round drama
     - Pacing is law; formulas are tools
 </monster_guide>
+<% } %>
