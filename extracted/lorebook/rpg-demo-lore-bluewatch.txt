@@ -1,0 +1,85 @@
+<bluewatch>
+Blue Watch Village
+Geographical Location:
+  Relative Position: Located on the periphery of the main city of the Golden Sail Republic, about an hour's walk away.
+  Terrain Features:
+    - Adjacent to the coast, featuring a natural shallow bay and a simple wooden pier.
+    - The back of the village faces low hills and a large expanse of undeveloped land.
+    - The central terrain is slightly lower, facilitating water collection and gatherings.
+
+Historical Background:
+  Origin: Initially a temporary outpost and supply port settlement for merchant ships and mercenaries traveling to and from the Golden Sail Republic.
+  Development Status: Not yet formally incorporated into the development system of large merchant guilds, thus maintaining long-term low-level autonomy and a simple structure.
+
+Demographic Structure:
+  Main Residents:
+    - Commuting laborers working in the Golden Sail Republic.
+    - Free citizens unable to afford the cost of living within the city.
+    - Low-level adventurers and temporary hired personnel.
+  Social Characteristics:
+    - Generally poor but possesses a relatively free mindset.
+    - Extremely vigilant regarding contract terms; cautionary tales about "City Contract Traps" often circulate.
+
+Village Layout:
+  Core Area:
+    Name: Village Center Assembly
+    Description:
+      - Open-air circular gathering space.
+      - A large circular pool is located in the exact center, serving functions for water storage, symbolism, and socializing.
+      - Surrounded by the market and public facilities.
+
+  Functional Facilities:
+    Adventurer Related:
+      - Small Adventurer's Guild:
+        Function: Quest posting, intelligence exchange, simple arbitration.
+        Attached Facilities:
+          * Guild Canteen (Cheap but portions are plentiful).
+          * Weapon Shop (Mainly second-hand goods and repairs).
+          * General Store/Depot (Collection, buying, and selling of adventurer goods).
+          * Small Cheap Inn (Bunk-bed style, mainly serving commuters and adventurers).
+
+    Commerce and Living:
+      - Mid-sized Market:
+          Description: Daily morning market and periodically expanding market selling seafood, grains, and cheap magical supplies.
+      - Magic General Store:
+          Merchandise: Low-tier magical devices, disposable runes, commuter protective gear.
+      - Tavern:
+          Positioning: Intelligence distribution center, also a place for debt laborers to find temporary gigs.
+      - Eateries:
+          Quantity: 2
+          Features:
+            * One specializes in seafood stews.
+            * One provides affordable commuter meals and dry rations for takeout.
+
+  Religion and Governance:
+    - Small Shrine:
+        Nature: Non-mainstream deity, leaning towards protection and navigational prayers.
+    - Village Head's House:
+        Description: The actual administrative hub of the village, also serving as a place for dispute mediation.
+
+Economic Characteristics:
+  Core Economic Mode:
+    - A "Labor Export Dependency Economy" towards the Golden Sail Republic.
+    - Local production is insufficient, relying on the circulation of outside goods.
+  Special Phenomena:
+    - Residents mostly hold short-term contracts to avoid long-term debt bondage.
+    - Currency circulation within the village is mixed; high-denomination Republic contract vouchers are occasionally seen.
+
+Development Potential:
+  Advantages:
+    - Close to the Republic but not completely controlled.
+    - Large amount of plannable land.
+    - Possesses a natural harbor and freshwater resources.
+  Future Possibilities:
+    - Being annexed by large merchant guilds and becoming a satellite city.
+    - Developing into a Free Port or a transit hub for gray market trade.
+    - Becoming the starting point of a new emerging metropolis.
+
+Plot Positioning:
+  Worldview Role:
+    - The settled community closest to the protagonist's initial landing point after being transported to the otherworld.
+  Narrative Function:
+    - The starting point for exploration and adaptation during the novice period.
+    - A buffer zone contrasting the "Contract Supremacy" values of the Golden Sail Republic.
+    - Can be revisited repeatedly in later stages to witness its development or corruption.
+</bluewatch>

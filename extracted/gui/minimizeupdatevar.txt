@@ -1,0 +1,7 @@
+<details class="uv">
+  <summary style="cursor: pointer; list-style: none; background-color: #1e1e2e; color: #e0e0e0; padding: 10px 20px; border-radius: 50px; text-align: center; border: 1px solid #3e4047; font-weight: 600; display: flex; align-items: center; justify-content: center; margin-bottom: 10px;">✨ Update Variables</summary>
+  <pre style="background-color: #111; padding: 10px; border-radius: 8px; font-size: 0.85em; white-space: pre-wrap;">$1</pre>
+</details>
+<style>
+details.uv > summary::-webkit-details-marker { display: none; }
+</style>

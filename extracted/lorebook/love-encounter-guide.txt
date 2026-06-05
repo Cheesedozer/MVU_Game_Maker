@@ -1,0 +1,84 @@
+<encounter_guide>
+v1.0 — Love Genre
+Partner Introduction Rules
+
+# =========================
+# WHAT QUALIFIES AS A PARTNER
+# =========================
+# Partner = a character {{user}} is pursuing or has a developing ROMANTIC or INTIMATE relationship with.
+# Importance, frequency of appearance, emotional closeness as friends, or story relevance do NOT qualify.
+# Major side cast (best friends, rivals, family, coworkers, mentors, allies) are NEVER Partners by default —
+# they belong in World_Calc.NPCs regardless of how often they appear or how significant they are to the plot.
+# When in doubt: World_Calc.NPCs. Do not promote.
+
+# =========================
+# PRE-DEFINED PARTNERS
+# =========================
+# Pre-defined partners are characters the card author has placed in the world.
+# Their full profile (personality, appearance, and Trait numbers) is in their <CharacterName> lorebook entry.
+# This file only defines WHEN and WHERE they can be first encountered.
+#
+# A first-meeting scene triggers when ALL of the following are true:
+#   1. {{user}}'s current location matches one of the partner's Meeting Locations
+#   2. The current time falls within her Schedule
+#   3. She is NOT already in stat_data.Partner (first meeting only — never triggers again)
+#
+# When triggered:
+#   Write a natural first-meeting scene at this location.
+#   Read her <CharacterName> lorebook entry for full personality, appearance, and Trait numbers.
+#   Initialize her full Partner entry in UpdateVariable Step 0.
+#   Do NOT fabricate a meeting at a location or time that does not match her row.
+
+Partner Roster
+Format:
+Name | Meeting Locations | Schedule | Special Rule
+
+[Card author fills in partner entries here. Examples:]
+# Sakura  | Campus Library, Café Blossom        | Weekday afternoons, Weekend mornings | —
+# Yuki    | Apartment hallway, Neighborhood park | Morning, Evening                     | Lives next door — introduce as neighbor first time {{user}} leaves or returns home
+
+# =========================
+# NPC PROMOTION (SIDE CHARACTERS)
+# =========================
+# A named NPC in World_Calc.NPCs may be promoted to a full Partner entry if ALL FOUR criteria are met:
+#   1. She has a personal name. Role labels ("the waitress", "the cashier", "the shopkeeper") NEVER qualify.
+#   2. She has spoken personal dialogue with {{user}} in at least 2 prior scenes.
+#   3. {{user}} engaged with her with clear personal interest — not a routine service transaction.
+#   4. ROMANTIC INTENT — at least one of the following has occurred in the story so far:
+#        - {{user}} has expressed romantic, flirtatious, or intimate interest toward her, OR
+#        - She has responded to {{user}} with clear romantic or intimate signals, OR
+#        - A lorebook entry or card author note designates her as a potential romantic interest.
+#      Friendship, admiration, gratitude, rivalry, or professional respect do NOT satisfy criterion 4.
+#
+# HARD RULE — Do NOT promote NPCs who are:
+#   - Unnamed or known only by role or title
+#   - Service staff incidental to the scene (background server, taxi driver, cashier)
+#   - A character {{user}} has merely mentioned or observed, not directly and personally engaged with
+#   - Friends, allies, mentors, or family — even if deeply important to the story
+#   - Characters {{user}} interacts with regularly but without romantic signals on either side
+#
+# When all three criteria are met:
+#   Derive her Trait numbers from the summary/personality field in World_Calc.NPCs.
+#   Initialize her full Partner entry in UpdateVariable Step 0.
+#   Her World_Calc.NPCs entry may remain (she is still part of the shared world),
+#   but she is now primarily tracked via the Partner collection.
+
+# =========================
+# MANUAL PARTNER OVERRIDE (PLAYER COMMAND)
+# =========================
+# If {{user}} explicitly says they want to make an NPC a partner
+# (e.g. "I want to make her a partner", "add her as a partner", "promote her"),
+# skip ALL three NPC Promotion criteria above. No scene count, no interest check, no name check needed.
+#
+# Requirements:
+#   - The NPC must have appeared in the current or a recent scene (AI knows who "her" refers to).
+#   - If the NPC has no personal name yet, AI must assign one naturally in the scene before promotion.
+#
+# On the NEXT reply after the player command:
+#   1. Write a brief scene moment that transitions her into a recurring character.
+#   2. If she exists in World_Calc.NPCs, derive Traits from her summary/personality field.
+#      If she does NOT exist in World_Calc.NPCs, AI creates a plausible profile based on
+#      everything established about her in prior scenes (appearance, occupation, personality cues).
+#   3. Initialize her full Partner entry in UpdateVariable Step 0.
+
+</encounter_guide>

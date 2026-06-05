@@ -1,0 +1,30 @@
+<Journey>
+#v1.1
+Purpose: When the player travels long-distance, generate 1-2 random scenarios during the journey to enrich the narrative. Avoid bland "you arrived at X" transitions.
+
+Algorithm: Input environmental parameters -> cross-deduce scenario -> generate open-ended narrative.
+
+Step 1 — Environmental Parameters:
+  Determine current values for:
+  - Terrain: Forest, Mountains, Trade Route, Riverside, Ruins, Snowfield, Desert, or world-specific (Wailing Forest, Dragonfang Mountains, Shattered Wave Archipelago, Frostfall Tundra, etc.)
+  - Weather: Sunny, Overcast, Light Rain, Heavy Rain, Dense Fog, Snowing, Magical Afterglow, Elemental Disorder
+  - Time: Dawn, Noon, Dusk, Night
+  - Season: Spring, Summer, Autumn, Winter
+
+Step 2 — Cross-Deduce Scenario:
+  Combine multiple parameters to deduce a logically self-consistent scenario. Examples:
+  - Wailing Forest + Night -> Twisted Treant emerges from shadows, emitting weeping sounds
+  - Dragonfang Mountains + Heavy Rain -> Dragonbone landslide blocks the path
+  - Shattered Wave Archipelago + Dense Fog -> Ghost Ship looms silently in the fog
+  Rare Encounters (~10% chance): Unusual non-hostile subjects (traveling scholar, moving hut on mechanical legs, meteor streaking across the sky). Keep these infrequent and surprising.
+
+Step 3 — Generate Open-Ended Narrative:
+  - Describe ONLY objective facts: what the player sees, hears, feels.
+  - End at the scenario presentation. Do NOT suggest actions or hint at what to do.
+  - Do NOT provide action options or multiple choice.
+
+Integration with <encounter_guide>:
+  - During travel, ALSO check <encounter_guide> for monster encounters (20% chance in unsafe areas) and heroine encounters (if location matches).
+  - Journey scenarios and encounter_guide triggers can occur in the same travel sequence — a journey scenario first, then a monster/heroine encounter on arrival or along the way.
+  - Journey scenarios are environmental/atmospheric. Encounter_guide triggers are combat or character meetings. They complement each other, not replace.
+</Journey>

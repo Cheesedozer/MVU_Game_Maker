@@ -1,0 +1,97 @@
+<Schema_Syntax>
+#v1.3
+# If you make changes here, you need to make changes in Extension > Tavern Helper > Scripts > Scheme
+
+# ⚠️ TUPLE FORMAT RULES:
+# Fields marked #tuple<type,string> MUST be arrays: [value, "Label"]
+# - #tuple<string,string> → ["value", "Label"]  e.g. ["Engni", "Name"]
+# - #tuple<number,string> → [123, "Label"]      e.g. [66, "Level"]
+# - #tuple<boolean,string> → [true, "Label"]    e.g. [true, "Is Present"]
+# When using JSONPatch "add" operation, ALL tuple fields MUST use array format, not plain values.
+# ❌ WRONG: "Affection": 60
+# ✅ RIGHT: "Affection": [60, "Affection"]
+
+World_Calc                           #object
+World_Calc.(Factions,Locations,Ruins,Events)                    #record<string,any>
+World_Calc.*                         #any (passthrough)
+
+World                                #object
+World.(Date,Time,Location,Weather)   #tuple<string,string>
+
+Mainchar                             #object
+Mainchar.(Name,Image,Race,Age,Gender,Occupation,Mental_state)              #tuple<string,string>
+Mainchar.(Level,Exp,Core-points,Strength,Agility,Constitution,
+Intelligence,Wisdom,Charisma,Hp_curr,Hp_max,Mp_curr,Mp_max,
+Sta_curr,Sta_max,Physical_attack,Physical_defense,Magic_attack,
+Magic_defense,Magic_assist)          #tuple<number,string>
+
+Mainchar.Quests                      #record<string,object>
+Mainchar.Quests.{key}.(Desc,Difficulty,Reward,Status,LastUpdated,Objective,ProgressSummary) #string
+
+Mainchar.Skills                      #record<string,object>
+Mainchar.Skills.{key}.Desc           #string
+Mainchar.Skills.{key}.*              #any (passthrough)
+
+Mainchar.Equipment                   #record<string,object>
+Mainchar.Equipment.{key}.Type        #string
+Mainchar.Equipment.{key}.Qty         #number
+Mainchar.Equipment.{key}.Desc        #string
+Mainchar.Equipment.{key}.Rarity      #string
+Mainchar.Equipment.{key}.Slot        #string
+Mainchar.Equipment.{key}.EquipmentLevel #number
+Mainchar.Equipment.{key}.Appearance  #string
+Mainchar.Equipment.{key}.*           #any (passthrough)
+
+Mainchar.Inventory                   #record<string,object>
+Mainchar.Inventory.{key}.Type        #string
+Mainchar.Inventory.{key}.Qty         #number
+Mainchar.Inventory.{key}.Desc        #string
+Mainchar.Inventory.{key}.*           #any (passthrough)
+
+Mainchar.Talents                     #record<string,object>
+Mainchar.Talents.{key}.Desc          #string
+
+Mainchar.Real_estate                 #object
+Mainchar.Real_estate.(Estates,Buildings,Assets)                 #record<string,any>
+Mainchar.Real_estate.*               #any (passthrough)
+
+Mainchar.Buffs                       #record<string,object>
+Mainchar.Buffs.{key}.Desc            #string
+Mainchar.Buffs.{key}.*               #any (passthrough)
+
+Mainchar.Ailments                    #record<string,object>
+Mainchar.Ailments.{key}.Desc         #string
+Mainchar.Ailments.{key}.*            #any (passthrough)
+
+Mainchar.*                           #any (passthrough)
+
+Familiar                             #record<string,object>
+Familiar.*                           #familiarMember object
+
+Familiar.{name}.(Name,Race,Age,Gender,Identity,Occupation,Location,Height,
+Cup_Size,Body_Measurements,Hair_Style,Physical_Features,
+Personality,Image,Familiar_Status,ExSkill,Biography,Secret)    #tuple<string,string>
+
+Familiar.{name}.(Level,Exp,Core-points,Hp_curr,Hp_max,Mp_curr,
+Mp_max,Sta_curr,Sta_max,Strength,Agility,Constitution,
+Intelligence,Wisdom,Charisma,Physical_attack,Physical_defense,
+Magic_attack,Magic_defense,Magic_assist,Affection,Lewdness,
+Control_desire,M_level,Sex_count)   #tuple<number,string>
+
+Familiar.{name}.(Is_in_battle_team,Is_present)                 #tuple<boolean,string>
+
+Familiar.{name}.Equipment            #record<string,object>
+Familiar.{name}.Equipment.{key}.Type #string
+Familiar.{name}.Equipment.{key}.Qty  #number
+Familiar.{name}.Equipment.{key}.Desc #string
+Familiar.{name}.Equipment.{key}.Rarity #string
+Familiar.{name}.Equipment.{key}.Slot #string
+Familiar.{name}.Equipment.{key}.EquipmentLevel #number
+Familiar.{name}.Equipment.{key}.Appearance #string
+Familiar.{name}.Equipment.{key}.*    #any (passthrough)
+
+Familiar.{name}.*                    #tuple<string|number|boolean|null|array|object,string> (catchall)
+
+MVUStatMenu_DB_Ver                   #string
+GameStarted                          #boolean
+</Schema_Syntax>

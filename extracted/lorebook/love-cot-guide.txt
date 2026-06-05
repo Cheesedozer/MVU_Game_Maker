@@ -1,0 +1,237 @@
+<COT_Guide>
+## V1.4 — Dating Simulation
+###### VARIABLE UPDATE RULES ######
+Highest Priority Rule:
+  MUST read <CURRENT_VARIABLE_DATA>, <JSONPatch_Format>, <Schema_Syntax> before any reasoning.
+  All updates based ONLY on real-time data. Keys/values use story language (English→English, 繁中→繁中).
+  check:
+    - CURRENT_VARIABLE_DATA is the source of truth. Never assume or reuse outdated values.
+    - Partner object keys MUST use English first name. Display name goes in "Name" field.
+    - Path keys MUST NOT contain "." or "/" (reserved as delimiters).
+      Allowed: Chinese chars, A-Z a-z, 0-9, _, -, #.
+
+OUTPUT FORMAT
+  End of EVERY response: output <UpdateVariable> block. No changes → JSONPatch = [].
+  check:
+    - Must appear at very end. JSONPatch must be valid JSON array.
+    - Every op object needs "op" and "path". Keys use normal JSON: "Key":
+    - Fields starting with `_` are readonly (e.g. `_var`). Don't update them.
+    - Never use "/path" as a key. Never put path string inside "op".
+    - Paths must reference existing keys unless using add.
+    - Use remove when Qty→0 (Belongings) or quest completed.
+    - Validate each op before output:
+      1. "op" = replace|delta|add|remove  2. "path" starts with "/"
+      3. replace/delta/add need "value"   4. remove has no "value"
+      5. Must pass JSON.parse()           6. No unescaped newlines in strings — use HTML tags.
+    - Many patch lines → re-check line by line before output.
+
+NUMERIC UPDATE RULES
+  Always use replace with final absolute value. If result is 0, use remove.
+  Never use delta. Never use +1/-1. Read current value first, calculate, then replace.
+
+TUPLE FIELD RULES
+  Fields stored as [value, label]. Applies to strings, numbers, AND booleans.
+  check:
+    - Only update index 0. Never change label unless explicitly instructed.
+    - BOOLEANS ARE TUPLES: [true, "Conflict Active"], [false, "Present"]. Never bare true/false.
+    - On Partner creation, every #tuple field MUST use tuple format — no exceptions.
+    - Money/Salary are tuples: [value, "Label"]
+	
+######  Actual Data Structure ###### 
+
+WORLD AND TIME RULES
+  path: /World
+  check:
+    - Update Date/Time when time naturally passes.
+    - Update Location only on explicit move or scene change.
+    - On Location change, update ALL in the SAME block:
+        1. /World/Location/0  2. /Mainchar/Location/0  3. /Partner/<Key>/Location/0 for every Is_present=true partner
+      Example (Florence present):
+        { "op": "replace", "path": "/World/Location/0", "value": "Cassia_County.Claymore_Manor.Living_Room" },
+        { "op": "replace", "path": "/Mainchar/Location/0", "value": "Cassia_County.Claymore_Manor.Living_Room" },
+        { "op": "replace", "path": "/Partner/Florence/Location/0", "value": "Cassia_County.Claymore_Manor.Living_Room" }
+      Is_present=false partners keep their last-known location.
+
+DYNAMIC WORLD EVENTS RULES
+  path: /World_Calc
+  World is dynamic per <World_Advancement_Protocol>. /World_Calc is newer than lorebook on conflicts.
+  check:
+    - Location born/developed/major change → record in /World_Calc/Locations
+    - Major event affecting {{user}}, partners, or revealing secrets → /World_Calc/Events
+    - Named recurring character with meaningful interaction → /World_Calc/NPCs
+      See NPC INSERTION THRESHOLD for qualifying conditions.
+      REGISTRATION GATE — ALL three conditions must be true:
+        1. Has a name AND a defined personality/role beyond a service function.
+        2. Has a lorebook entry OR has appeared across 2+ scenes with direct meaningful dialogue.
+        3. Is NOT a service/background role (waiter, guard, clerk, shop assistant, passerby, subordinate of a main cast NPC).
+           A named waiter is still a waiter. The name alone does not qualify.
+        NPC fields: name, relationship, occupation, personality, last_seen, summary.
+        NPC calculation traits: Dominance, Confidence, Shyness, Playfulness, Kindness, Patience.
+        WHEN TO ADD THE 6 TRAITS:
+          - NPC has a lorebook entry OR character profile with personality described → add ALL 6 traits immediately on first registration.
+          - NPC qualified via 2+ scenes (no lorebook) → add the 6 traits at registration.
+        Map trait values from the personality description using the same 0-100 / -100 to 100 scale as Partners.
+      NPC summary = character bio only (who they are). NEVER log scene events or timestamps in summary.
+      Scene events → World_Calc.Events. See <Update_Analysis_Detail> step 15 for the enforced rule.
+    - New info conflicting with lorebook → record in /World_Calc/Events
+
+CHARACTER DATA STRUCTURE
+  Mainchar: /Mainchar — all player vars. Only Mainchar has Skills and Quests. Both Mainchar and Partner have Belongings.
+  Partner: /Partner/<PartnerKey> — PartnerKey=English first name. Name field=display name. Partner is a COLLECTION.
+
+  TimeSinceLastSeen:
+    Format: "YYYY-MM-DD HH:MM". Update ONLY when partner meets/contacts {{user}} this reply.
+    Set to current World.Date + World.Time. Don't update absent partners with no contact. Don't compute durations.
+
+PARTNER CREATION RULES
+  CRITICAL: Read <character> profile BEFORE assigning stats. If not in <character>, use lorebook.
+  Follow <CharacterGenerationProtocol> — character independence is priority. Contradictions are depth.
+  check:
+    - Use add at /Partner/<NameKey>. NameKey=English first name.
+    - Tuple fields=[value, label]. JSON must pass JSON.parse(). Keys use normal syntax: "Identity":
+
+  ── PARTNER CREATION PIPELINE (exact order) ──
+
+    STEP A — Read <character> profile:
+      1. Extract bio details (Name, Age, Gender, Race, Occupation, etc.).
+      2. Map personality to STATIC Traits (0-100 or -100 to 100):
+         Dominance, Shyness, Playfulness, Kindness, Patience, Confidence,
+         EmotionalStability, Impulsive, Curiosity, ControlPreference.
+      3. Map sexual personality → Initiative, IntensityPreference.
+      4. Extract Hobbies, Values, FlirtingStyle.
+      5. Boundaries: 1 sentence social limits + 1 sentence sexual limits.
+         e.g. "Will not tolerate being spoken down to in front of others. No physical intimacy in public."
+         Hobbies/Values start as {}. Populate if profile lists them: { "Cooking": { "Desc": "" } }
+      6. If occupation implies income, set Salary [value, "Salary"] (monthly Ɉ JPM).
+
+    STEP B — Assign STATIC Traits:
+      1. Consult <Personality_Guide> if archetype mentioned.
+      2. Map personality→Trait values with reasoning for each.
+      3. MUST print <partner_trait_check> BEFORE JSONPatch:
+         - Name + archetype | Each Trait: value + 1-line justification | Each Sexual Pref: value + justification
+         - Final: "All Traits assigned from profile. Ready to proceed."
+
+    STEP C — Initialize DYNAMIC stats:
+      1. Core: Affection=0, Trust=0, Respect=0, Attraction=0, Comfort=0, Bonds=0, Energy=50.
+         EXCEPTION: pre-existing relationship in profile → set appropriate values.
+      2. Intimacy: Desire=0, Arousal=0, Openness=0.
+      3. Emotional: Jealousy=0, Guilt=0, Depression=0.
+      4. State: Mood=contextual, Stress=0, Embarrassment=0, Excitement=0.
+      5. Flags: RelationshipStage="Stranger" (or per profile), ConflictActive=false, Is_present=true.
+      6. NSFW: Lewdness=0, Sex_count=0.
+      7. Containers: PositiveMemories={}, NegativeMemories={}, ImportantEvents={}, Friends={}.
+      8. UI Helpers: Base100=100, Base400=400.
+
+    STEP D — Output JSONPatch:
+      Single "add" at /Partner/<NameKey> with complete object. All #tuple fields in tuple format.
+      Hobbies and Values are collections ({}), NOT tuples.
+
+  ── END PIPELINE ──
+
+  Phase 1 — Profile (ALL #tuple labeledStr)
+    Name, Age (string e.g. ["25","Age"]), Gender, Race, Identity, Occupation, Location,
+    Height, Cup_Size, Body_Measurements ("82-50-85cm" bust-waist-hips), Hair_Style,
+    Physical_Features, Personality (archetype/short desc), Biography, Secret, Image
+
+  Phase 2 — Traits & Preferences (ALL STATIC #tuple, set once, NEVER modified)
+    labeledNum: Dominance(-100~100), Shyness(0-100), Playfulness(0-100), Kindness(0-100),
+    Patience(0-100), Confidence(0-100), EmotionalStability(0-100), Impulsive(0-100),
+    Initiative(0-100), IntensityPreference(0-100), ControlPreference(-100~100), Curiosity(0-100)
+
+  Phase 3 — Dynamic Stats, Flags & Containers (ALL REQUIRED)
+    #tuple labeledNum (start 0 unless noted):
+      Affection(0-100), Trust(-100~100), Respect(-100~100), Attraction(0-100), Comfort(0-100),
+      Bonds(0-100), Energy(0-100,start50), Desire(0-100), Arousal(0-100), Openness(0-100),
+      Jealousy(0-100), Guilt(0-100), Depression(0-100), Stress(0-100), Embarrassment(0-100),
+      Excitement(0-100), Lewdness(-100~100), Sex_count, Money, Salary(monthly Ɉ JPM),
+      Base100(=100), Base400(=400)
+    #tuple labeledStr: Mood(contextual), RelationshipStage("Stranger"), Thoughts, 
+      TimeSinceLastSeen("YYYY-MM-DD HH:MM"), FlirtingStyle, Boundaries
+    #tuple labeledBool: ConflictActive([false,"Conflict Active"]), Is_present([true,"Present"])
+    #collection (empty {}): Hobbies, Values, PositiveMemories, NegativeMemories,
+      ImportantEvents, Friends, Belongings
+
+  Secret Field Mapping Rules
+    path: /Partner/<NameKey>/Secret — stored as tuple ["<html>", "Secret"]
+    If "secret_and_trump_cards:" NOT in <character>:
+      - Invent: ["<ul><li>secret needing help</li><li>past she can't resolve alone</li></ul>", "Secret"]
+    If "secret_and_trump_cards:" EXISTS:
+      1. Print <secret_scratch_check>: count bullets, list each with COMPLETE FULL TEXT (no truncation).
+         Final: "All X bullets listed. Ready to generate HTML."
+      2. Generate <ul><li>...</li></ul>. Each bullet → one <li>. Copy FULL text. Don't skip/invent.
+      3. CHECKPOINT: "HTML has X <li>. Source had X bullets. Match: YES/NO". If NO → regenerate.
+      4. If section missing → ["Secret is not available", "Secret"]
+    JSON RULES: Secret value MUST be single-line HTML, NO bare newlines.
+      WRONG: ["\nBelief 1\nBelief 2\n", "Secret"]
+      RIGHT: ["<ul><li>Belief 1</li><li>Belief 2</li></ul>", "Secret"]
+
+  STRICT JSON OUTPUT MODE
+    - All keys/strings in double quotes. No trailing/missing commas or quotes.
+    - No unescaped newlines in string values — use HTML tags on single line.
+    - Final JSONPatch must pass JSON.parse(). Validate before output.
+
+BELONGINGS RULES
+  Item container for Mainchar and Partner. No stat bonuses. Slot is always "Misc".
+  Paths: /Mainchar/Belongings, /Partner/<NameKey>/Belongings
+  Fields per item: Type (Gift/Accessory/Consumable/Keepsake/Key Item), Slot ("Misc"), Qty (int), Desc (string)
+  Rules:
+    - Only update individual item keys. Never overwrite entire container.
+    - EVERY item MUST include "Slot":"Misc" — required for equip/unequip to work.
+    - BEFORE any op, check if item exists in CURRENT_VARIABLE_DATA:
+      Not exists → "add" with complete object: {"Type":"Gift","Slot":"Misc","Qty":1,"Desc":"A dozen red roses"}
+      Exists → "replace" at .../Qty with final absolute value (current + gained - spent)
+      Qty→0 → "remove" entire item (not just Qty)
+
+SKILLS RULES
+  path: /Mainchar/Skills — only Mainchar. Update individual skill keys.
+
+QUEST RULES
+  path: /Mainchar/Quests — only Mainchar.
+  Fields: Desc, Objective, ProgressSummary, Reward, Status, LastUpdated ("YYYY-MM-DD HH:MM").
+  Rules:
+    - Desc = quest brief/background. Treat as stable reference text; set on create, do not use for live progress logs.
+      DEADLINE RULE: If the source material mentions a relative deadline (e.g. "within two weeks", "by next month",
+      "in three days"), convert it to an absolute in-game date using the current World.Date at the moment the quest
+      is created. Write the resolved date directly into Desc or Objective (e.g. "Deadline: YYYY-MM-DD").
+      Never write relative time ("in two weeks") — only absolute dates.
+    - Objective = current concrete win condition. Keep short and testable (what must happen to finish).
+      If Objective includes a deadline, it must be an absolute date, not a relative one.
+    - ProgressSummary = short running status (2-3 sentences) of what has happened so far.
+    - Status should reflect phase (e.g., Active, Blocked, Completed).
+    - Completion check runs in <Update_Analysis_Detail> step 14 every reply: if Objective is already satisfied in current scene/data, remove that quest entry.
+    - Update LastUpdated whenever Objective, ProgressSummary, or Status changes.
+    - No progress/change this turn → do not modify quest fields.
+    - Never overwrite entire /Mainchar/Quests; only add/remove/replace individual quest keys.
+  Completed quests must be removed.
+
+MEMORY RULES
+  Collections with Desc + TimeStamp ("YYYY-MM-DD HH:MM"). FIFO on capacity.
+  Paths & limits: PositiveMemories(max 5), NegativeMemories(max 5), ImportantEvents(max 10)
+  Key = short label (e.g. "First_Date"). No "." or "/" in keys.
+  Before adding: MUST count entries in <CURRENT_VARIABLE_DATA>. At capacity → remove oldest TimeStamp first, then add new.
+  See <Update_Analysis_Detail> step 7 for when to create memories.
+
+FRIENDS RULES
+  Tracks partner's social circle — named characters she directly interacted with.
+  path: /Partner/<NameKey>/Friends — no capacity limit.
+  Fields: Name (#string), FriendshipScore (#string, numeric value as string, 0-100, start "10"), Mood (#string)
+  Score changes ONLY on direct interaction between the two characters (spoke to each other, acted toward
+  each other, helped/clashed). Shared witness of a third-party event does NOT count. Co-presence alone
+  does NOT count. See <Update_Analysis_Detail> step 15b for the full decision procedure.
+  EXISTENCE CHECK (mandatory before every Friends patch):
+    BEFORE writing any op, look up /Partner/<NameKey>/Friends/<FriendKey> in CURRENT_VARIABLE_DATA.
+    Not exists → use "add" with complete object. FriendshipScore MUST start at exactly "10", no exceptions:
+      {"Name":"<Name>","FriendshipScore":"10","Mood":"<mood>"}
+      NEVER set a higher or lower starting score even if the relationship feels established.
+    Exists     → use "replace" at the specific field path (e.g. .../FriendshipScore)
+    NEVER use "replace" on a Friends entry that is not confirmed present in CURRENT_VARIABLE_DATA.
+  Score=0 → "remove" entire entry. Key=English first name. Only update individual keys.
+
+GENERIC CONTAINER RULES
+  Containers (Belongings, Skills, Quests, memories, Friends): never overwrite entire container.
+  Only add/remove/replace nested entries.
+
+SAFETY RULES
+  - Don't invent keys unless using add. Don't modify tuple labels.
+  - Missing path → create with add at correct level.
+</COT_Guide>

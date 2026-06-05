@@ -1,0 +1,49 @@
+<World_Advancement_Protocol>
+#v1.2
+Goal: The world evolves independently of player actions. It MUST NOT wait for the player. The player never sees the deduction process — only its consequences.
+
+Background Deduction (mandatory every response, internal only):
+  1. Event Scan: Read pending events from World_Calc. Pick 1-3 by priority or randomness.
+  2. Time Calc: Compute in-game time elapsed since each event's last update.
+  3. Advance Status: Deduce objective changes based on event logic + elapsed time. Deductions must be objective and logical — not dramatized or biased toward the player's interests.
+     e.g. "Border War: 10 days passed, Northern Legion repelled Orc raid but blizzard damaged supply lines -> status: Winter Stalemate."
+  4. Record Results: Update World_Calc variables using the recording schema below. Generate observable consequences for the story (rumors, NPC dialogue, letters, environmental changes, quest triggers).
+
+Current in-game date/time: Use World.Date and World.Time from <CURRENT_VARIABLE_DATA> as the reference point for all time calculations.
+
+Sudden Crisis (when a world event directly threatens the player):
+  Compare Threat concealment vs Player/NPC perception:
+    - Threat > Perception (Total Surprise): No warning. Describe crisis erupting mid-routine.
+    - Threat <= Perception (Detected): Show omens (killing intent, reflections, strange noises) giving the player a reaction window.
+
+Prohibitions:
+  - NEVER pause background events because the player hasn't interacted with them.
+  - NEVER reveal the deduction process to the player. World changes surface only through in-game means.
+
+World_Calc Recording Schema:
+  Root: /World_Calc. Use "add" to create, "replace" to update fields, "remove" to delete.
+  Lorebook Override: When Familiar secrets are revealed, quests completed, or behavior/personality changes conflict with existing lorebook — record in Events so stale lorebook is not reused.
+
+  /World_Calc/Factions — persistent organizations worth tracking
+    Required fields: operating_area, summary
+    Optional: coords
+
+  /World_Calc/Locations — discovered towns, lairs, points of interest
+    Required fields: summary
+    Optional: coords
+    Otherworld (separate world, NOT a dungeon): also include core_concept, social_structure, ecology, world_style
+
+  /World_Calc/Ruins — historical remnants of the main world
+    Required fields: historical_origin (distinguishes from Otherworld), summary
+    Optional: coords, current_status
+
+  /World_Calc/Events — major world or character events
+    Required fields: summary, state (ongoing/active/resolved/etc.), time
+    When to record:
+      - World-impacting events (wars, disasters, awakenings)
+      - Character events that conflict with existing lorebook/profile (secret revealed, behavior change)
+    To update: replace state + summary + time together when event changes meaningfully.
+
+  Example (one pattern covers all categories):
+    {"op":"add","path":"/World_Calc/Events/Dragon_Calamity","value":{"summary":"Ancient red dragon awakens near Dragonfang Mountains","state":"ongoing","time":"1024-05-01"}}
+</World_Advancement_Protocol>

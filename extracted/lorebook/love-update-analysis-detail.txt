@@ -1,0 +1,369 @@
+<Update_Analysis_Detail>
+#v1.6
+# UPDATE ANALYSIS — VARIABLE UPDATE CHECKLIST
+# This checklist runs inside <UpdateVariable><UpdateAnalysis> every reply.
+# Consult <COT_Guide> for JSONPatch formatting, tuple rules, and data structure requirements.
+
+  Execute checklist in order:
+
+  ANTI-DRIFT ENFORCEMENT (MANDATORY EVERY REPLY):
+    - PER-REPLY RESET: Treat each reply as a fresh run. Never assume a step can be skipped because it was skipped in prior replies.
+    - NO CARRY-FORWARD EXEMPTIONS: Eligibility for every step must be checked again from current scene + CURRENT_VARIABLE_DATA.
+    - STEP LEDGER REQUIRED: In <UpdateVariable><UpdateAnalysis>, record one line for EVERY step (1,2,3,4,4b,5,...,17,17b):
+      Step <id> | EXECUTED or SKIPPED | brief reason from this reply.
+    - SKIPPED REQUIRES NEGATIVE PROOF: A skipped step must include why trigger conditions were not met in this reply.
+    - MISSING LEDGER ENTRY = INVALID RESPONSE: If any step is not logged, regenerate analysis before writing JSONPatch.
+
+  REFERENCE: For exact stat delta magnitudes (per check type, per disposition, per trigger) consult <Stat_System>.
+  This checklist tells you WHAT to patch and WHEN. <Stat_System>, <Social_Check_System>, <Intimacy_System>,
+  and <Trait_Behavior> tell you HOW MUCH to shift each value. Always read those files for actual numbers.
+
+  1. NEW PARTNER INITIALIZATION:
+     This step has TWO independent sub-checks. Run BOTH. Neither cancels the other.
+
+     ── 1A. NEW PARTNER CHECK ──────────────────────────────────────────────────
+       [ooc:] OVERRIDE: If {{user}}'s input contains [ooc: add partner ...] — skip eligibility, create entry immediately as instructed.
+       Is there a character in this scene who does NOT yet have an entry in stat_data.Partner?
+         NO → 1A | SKIPPED — no new Partner this scene. Proceed to 1B.
+         YES → run ELIGIBILITY CHECK:
+           Confirm she meets the Partner definition in <encounter_guide> (WHAT QUALIFIES AS A PARTNER).
+           Friends, mentors, allies, family, coworkers, recurring side cast without romantic signals → NOT a Partner. Proceed to 1B.
+           NPC Promotion requires ALL FOUR criteria in <encounter_guide>. Check criterion 4 (Romantic Intent) explicitly.
+           If eligible → 1A | EXECUTED — create her full Partner entry NOW (see fields below), then proceed to 1B.
+       LEDGER: "EXECUTED" = new entry written. Check passed but already exists = SKIPPED.
+
+       PARTNER ENTRY FIELDS (on create):
+         SOURCE: Her lorebook entry or World_Calc.NPCs summary. Map Trait numbers from description.
+         TRAITS (set once, NEVER changed after):
+           Dominance, ControlPreference: -100 to 100. All others: 0-100.
+           Fields: Dominance, Confidence, Shyness, Playfulness, Kindness, Patience, EmotionalStability,
+                   Impulsive, Curiosity, ControlPreference, Initiative (0-100), IntensityPreference (0-100)
+           FlirtingStyle: string (e.g. "Teasing", "Reserved", "Direct")
+           Boundaries: two-part — 1 social sentence + 1 sexual sentence.
+         DISPOSITIONS (cold start): Trust=0, Respect=0, Affection=0, Comfort=0, Openness=0, Jealousy=0,
+           Guilt=0, Depression=0, Energy=100, Stress=0, Desire=0, Arousal=0, Lewdness=0
+           Attraction: 3-roll formula from <DC_Determine_Guide>: (((d20 * d20 + d20) mod 20) + 1). Result = initial Attraction.
+         RELATIONSHIP FLAGS: ConflictActive=false, Is_present=true, TimeSinceLastSeen="YYYY-MM-DD HH:MM"
+           RelationshipStage default = "Stranger".
+           OVERRIDE: If lorebook defines pre-existing relationship (coworker, childhood friend, ex, fiancée, wife, etc.),
+             set RelationshipStage to the closest matching stage from the GATE CONDITIONS table in <Stat_System>.
+           NameKey collision: check CURRENT_VARIABLE_DATA.Partner for same first name. Suffix index if needed: Yuki2, Yuki3.
+           LastInitiativeDate: initialize as "".
+         PULSE (first-meeting scene): Mood, Embarrassment, Excitement.
+         PROFILE (copy from lorebook): Name, Age, Gender, Race, Identity, Occupation, Location, Height,
+           Cup_Size, Body_Measurements, Hair_Style, Physical_Features, Personality, Biography, Secret
+         MEMORY: PositiveMemories → "First_Meeting" (Desc=scene summary, TimeStamp=current). NegativeMemories={}, ImportantEvents={}
+         LIFESTYLE: Hobbies:[] | Values:[] | Money:0 | Salary:0 | Belongings:{}
+         STATS: Sex_count=0, Bonds=0
+         THOUGHTS: her internal first impression of {{user}} — 1-2 sentences, not spoken aloud.
+
+     ── 1B. NPC REGISTRATION CHECK ────────────────────────────────────────────
+       Is there a named character in this scene (NOT already a Partner) who has a lorebook entry or is referenced in <encounter_guide>?
+         NO → 1B | SKIPPED — no named NPC to register this scene.
+         YES → 1B | EXECUTED — go to Step 15 and add or update their World_Calc.NPCs entry.
+           Log: "Step 1B | EXECUTED — <Name> present, not a Partner. NPC entry handled in Step 15."
+           In Step 15: write (name, relationship, occupation, personality, last_seen, summary) from lorebook.
+           Generic roles ("Waitress", "Guard", "Clerk") with no name → skip 1B entirely.
+
+  2. THOUGHTS: MANDATORY,  no exception for all Partner within the scene. Update every reply. Max 2 sentences. Her internal monologue -- what she is thinking but not saying aloud.
+
+  3. PULSE: Update Mood, Arousal, Embarrassment, Excitement based on what just happened.
+     Arousal resets per <Stat_System> Arousal reset rule (Desire-baseline). Do not carry high Arousal across scene breaks.
+
+  4. SOCIAL CHECK RESULTS: If a check occurred, apply stat deltas per check type from <Stat_System> SOCIAL CHECK OUTCOME tables.
+     Only DISPOSITION / EVENT / MILESTONE stats may change. NEVER change TRAITS.
+     Max Affection gain this scene: +10 total (cap here even on Critical Success).
+     NPC WALK-AWAY CHECK: If you wrote the partner leaving the scene due to repeated failure,
+       apply the NPC WALK-AWAY RESOLUTION patch from <Social_Check_System> before any other steps:
+       RelationshipStage advance ONLY if currently Stranger → Acquaintance (no further advancement),
+       ConflictActive=false, Partner Stress=20, Affection -2. No Stage Decay. No Affection reset.
+
+  4b. NARRATIVE DISPOSITION CHANGES: Apply changes to non-Affection disposition stats caused by scene events.
+     This step is MANDATORY every reply — run it even when no social check occurred.
+     These stats can shift purely from what happened in the scene, independent of any roll.
+     RULE: If you computed a stat change in your thinking — you MUST write it to JSONPatch here. No exceptions.
+
+     Stats in scope (review each against this reply's scene + CURRENT_VARIABLE_DATA):
+       Trust, Respect, Comfort, Attraction, Jealousy, Guilt, Depression.
+     Rise/Fall triggers and per-stat magnitude bands are defined in <Stat_System> under the
+     "# DISPOSITIONS — apply EmotionalStability multiplier" header. Look up each stat by its exact
+     anchor line in that file: **Trust** [DISP], **Respect** [DISP], **Comfort** [DISP],
+     **Attraction** [DISP], **Jealousy** [DISP], **Guilt** [DYN — EVENT], **Depression** [DISP].
+     Read that file for which scene events shift which stat and by how much.
+
+     MAGNITUDE GUIDE (this step only): Narrative events without a check = small shifts (+1 to +5, -1 to -5 per stat).
+       Reserve larger swings for social check outcomes (step 4). Stacking both is fine — they are independent.
+     WRITE RULE: For each stat you determined changed, include a replace op in JSONPatch. Do NOT leave it in thinking only.
+
+  5. MUNDANE SCENE: If no check occurred, classify scene quality:
+     Exceptional -> Affection +3 ({{user}}'s action engaged her core values/Trait needs).
+     Positive -> Affection +2 (pleasant, no friction).
+     Neutral -> Affection +1 (time together, nothing notable).
+     Negative -> Affection +0 (friction or boredom).
+     Harmful -> Affection -2 (ignored, dismissed, boundary pushed).
+     All subject to +10 scene cap.
+
+  6. AFFECTION RESET CHECK (run after applying all Affection changes this step):
+     Gate conditions per stage, Stage Promotion Decay formula, terminal stages, and Story-Driven Direct
+     Promotion rules are all defined in <Stat_System>. This step is the runtime checklist — read that file
+     for the actual gate values and decay math.
+
+     TERMINAL STAGE CHECK (run first): Per <Stat_System>, the EXACT terminal stages are
+       Partner, Wife, Stable_Sex_Partner.
+       If YES (terminal): hard cap Affection at 100. Do not reset to 0. No gate check. No ImportantEvents.
+               She is fully developed — Affection stays at 100, but it can drop from events. Skip the rest of step 6.
+
+     STORY-DRIVEN DIRECT PROMOTION: If this scene produced a narrative stage leap (marriage, ooc: override,
+       or unambiguous story milestone) — advance RelationshipStage to the new stage immediately,
+       reset Affection to 0, apply Stage Promotion Decay ONCE (not per skipped stage), recalculate Bonds,
+       write ImportantEvents. If destination is terminal, Affection stays at 0 and builds from future scenes.
+       See full rule in <Stat_System> Affection block §"STORY-DRIVEN DIRECT PROMOTION".
+
+     If NOT terminal AND new Affection >= 100: check the next-stage gate per <Stat_System> ROUTE GATES.
+       WORKED EXAMPLE (gate not met): Fiona is Acquaintance, Affection hits 100, Comfort=25.
+         Gate requires Comfort >= 30. Comfort 25 < 30 → Gate NOT MET → set Affection to 99. Do NOT write "Affection=100 maintained". Do NOT treat as terminal.
+       STORY-DEFINED MILESTONE STAGES (Girlfriend -> Partner, Any -> Wife): NO Affection gate exists.
+         Cap Affection at 99 and wait. Auto-promotion NEVER occurs at these stages — only STORY-DRIVEN DIRECT PROMOTION advances them.
+       Gate MET:     advance RelationshipStage, reset Affection to 0, write ImportantEvents entry,
+                     and apply STAGE PROMOTION DECAY per <Stat_System> (50% reduction to Trust, Comfort, Respect, Attraction).
+                     Recalculate Bonds after this reduction (step 11 will do it automatically).
+       Gate NOT MET: cap Affection at 99. Do not advance RelationshipStage.
+
+     ImportantEvents entry on stage advance:
+       Key: descriptive label (e.g. "Became_Friends"), Desc: from stage -> to stage + what triggered it,
+       TimeStamp: current in-world date/time.
+
+  7. MEMORY SYSTEM:
+     PositiveMemories (max 5): Write new entry IF (D20 >= 18 AND result was Success) OR result was Critical Success.
+       Key = short label. Desc = 1-2 sentences about what happened. TimeStamp = current in-world time.
+       BEFORE adding: Check count. If already 5 entries, find oldest by TimeStamp and remove it first.
+     NegativeMemories (max 5): Write new entry IF (D20 <= 3 AND result was Failure) OR result was Critical Failure.
+       Same format and capacity management as PositiveMemories.
+     ImportantEvents (max 10): ONLY on RelationshipStage change (step 6 above). Not for any other event.
+       BEFORE adding: Check count. If already 10 entries, find oldest by TimeStamp and remove it first.
+     
+     FIFO PROCEDURE (apply when at capacity):
+       1. Read all entries in the collection from CURRENT_VARIABLE_DATA.
+       2. Compare TimeStamp values (format "YYYY-MM-DD HH:MM") — find the earliest (oldest).
+       3. Add JSONPatch operation: {"op": "remove", "path": "/Partner/<PartnerKey>/<CollectionName>/<OldestKey>"}
+       4. Then add new entry: {"op": "add", "path": "/Partner/<PartnerKey>/<CollectionName>/<NewKey>", "value": {...}}
+
+  8. LEWDNESS (NSFW only — skip entirely if no sexual encounter this scene):
+     Apply S-type / M-type Lewdness shifts per <Stat_System> **Lewdness** [DYN — DURING SEX ONLY] block for magnitudes and prerequisites.
+     See <Intimacy_System> Lewdness section for behavioral axis (S-pole/M-pole writing directives).
+
+  9. DESIRE CEILING: Before any Desire update, apply the trait-driven ceiling defined in
+     <Stat_System> Desire [DISP] TRAIT CEILING block (Low-drive / Moderate / High-drive thresholds and caps).
+
+  10. STAT CAPS -- enforce on every JSONPatch value before writing:
+     Affection, Arousal, Excitement, Embarrassment, Energy, Stress,
+     Attraction, Comfort, Desire, Openness, Jealousy, Guilt, Depression: 0-100
+     Trust, Respect: -100 to 100
+     Lewdness: -100 to 100
+     All TRAITS: DO NOT TOUCH.
+
+  11. BONDS: Recalculate if any core stat changed.
+      Bonds = Trust + Comfort + Respect + Attraction
+      Range: -100 to 400. No mapping, no division, no rounding.
+
+  12. Sex_count: Increment by 1 only if a sexual encounter completed this scene.
+
+  13. Mainchar stats: Update Energy_curr and Stress_curr bars this scene.
+      STATIC (never change from scene events): Salary, Charisma, SocialEnergy, Energy_max (100), Stress_max (100).
+      All monetary values use Ɉ JPM (Japon Mark) — a universal fictional currency at JPY scale.
+      Salary is stored as MONTHLY income (月収). Payday deposits Salary directly.
+
+      ENERGY BAR (Mainchar.Energy_curr AND Partner.Energy):
+        Full rules for both Mainchar and Partner energy costs, states, forced climax, and sleep restore
+        are defined in <Intimacy_System> ENERGY DEPLETION section. Read and apply from there.
+        Key patch rule: after full sleep (8h rest narrative) → set Energy_curr = Energy_max for Mainchar
+        AND Energy = 100 for ALL Partners (even those not in the scene).
+
+      STRESS BAR (Mainchar.Stress_curr / Mainchar.Stress_max):
+        Apply Stress shifts per <Stat_System> Stress section (rise/fall triggers and per-scene magnitudes).
+        Floor: 0. Cap: 100.
+
+    14. Quest System: Check add/remove/update. Completed -> rewards, remove, check follow-up.
+      QUEST FIELD DISCIPLINE (run before reward logic):
+      - Quest fields are: Desc, Objective, ProgressSummary, Reward, Status, LastUpdated.
+      - Desc is stable quest brief/background. Do NOT use Desc as a progress log.
+      - Objective is the concrete finish condition for completion checks.
+      - ProgressSummary is short rolling status (2-3 sentences max) of what has happened so far.
+      - If Objective/ProgressSummary/Status changed this reply, update LastUpdated.
+      - If no quest progress/change happened this reply, do not patch quest fields.
+      DEADLINE CONVERSION (ON QUEST CREATE ONLY):
+      - If the quest description or dialogue contains a relative deadline ("in two weeks", "by next month",
+        "within three days", etc.), you MUST convert it to an absolute in-game date immediately on creation.
+      - Use current World.Date as the base. Calculate the target date and write it as YYYY-MM-DD.
+      - Write the resolved absolute date into Desc or Objective. NEVER write relative time in either field.
+      - Example: scene date is 2024-03-10, quest says "finish in two weeks" → write "Deadline: 2024-03-24".
+      COMPLETION DECISION (run every reply for each active quest):
+      - Compare current scene + CURRENT_VARIABLE_DATA against Objective.
+      - If Objective is satisfied: mark complete flow now (apply rewards, then remove quest entry).
+      - If Objective is not satisfied: keep quest; update ProgressSummary only when meaningful progress occurred.
+      ON QUEST COMPLETION — apply stat rewards based on quest nature:
+      a) Apply any explicit rewards stated in the Quest.Reward field (money, items, etc.).
+      b) Then determine 1-3 PARTNER stat boosts appropriate to HOW the quest was completed and WHAT it involved.
+         Use judgment — pick from the list below based on quest theme. Do NOT boost stats that don't fit.
+
+         DISPOSITION stats (OCCASIONAL — persistent shifts, apply as quest completion reward):
+           Trust        — promise kept, reliable, or honest confession
+           Respect      — showed competence, integrity, or solved her problem
+           Affection    — shared experience, quality time, or went out of his way for her
+           Attraction   — physically impressive act or strong confident self-presentation
+           Comfort      — low-stakes, safe, unjudged interaction
+           Desire       — romantic quest or ended in intimate closeness
+           Openness     — emotional revelation or vulnerability from either side
+           Jealousy     — rival exposed or {{user}} admired by others (rises, not a reward)
+           Depression   — sustained hardship resolved: small reduction
+           Energy       — restful/low-demand quest: small partner Energy recovery
+           Stress       — stressful resolved: Mainchar.Stress_curr drops; relaxing: partner Stress drops
+
+         PULSE stats (PER-REPLY — always update based on scene, not just quests):
+           Mood         — always update. Quest success → Happy/Excited/Loving. Bittersweet outcome → Melancholic.
+           Excitement   — spikes if quest ended with a win, surprise, or milestone
+           Embarrassment — spikes if quest ended awkwardly or put her in an exposed situation
+
+         REWARD SIZE GUIDE:
+           Minor quest (errand, small favor):        +5 to +8 per stat (1 stat max)
+           Standard quest (meaningful task):         +8 to +12 per stat (1-2 stats)
+           Major quest (significant story milestone): +12 to +20 per stat (2-3 stats)
+           All boosts still subject to stat caps and the +20 Affection scene cap.
+
+      c) Check if the completed quest unlocks a follow-up quest. If yes, add it immediately.
+
+  15. World_Calc: Check all three collections — NPCs, Events, and Locations — for adds/amendments/removals. (per <World_Advancement_Protocol>)
+
+      ── [i] World_Calc.NPCs ──────────────────────────────────────────────────
+      NPC entries use ONLY: name, relationship, occupation, personality, last_seen, summary.
+      Personality stats (Dominance, Confidence, Shyness, Playfulness, Kindness, Patience)
+      may be added for recurring NPCs with 2+ scenes. NO other stats. NPCs are NOT mini-Partners.
+      NPC summary = WHO this person is (character facts only). NEVER write scene events, timestamps,
+      or activity logs into summary. If you want to record what happened — use World_Calc.Events.
+
+      UPDATE TRIGGERS — check every existing NPC who appears or is referenced this scene.
+      For each field below, patch ONLY when the listed trigger fires; otherwise leave untouched.
+        summary       → APPEND newly revealed STABLE character facts (background, secret, standing, lasting trait change).
+                        Never overwrite existing facts. Never insert scene events, timestamps, or "today she..." lines.
+                        If the change is an event (deal struck, promise made, milestone) → write it in World_Calc.Events instead.
+        Personality stats (Dominance/Confidence/Shyness/Playfulness/Kindness/Patience) →
+                        patch only on identity-level revelation (same bar as Partner Trait change in step 17).
+                        Routine scenes do NOT shift NPC personality stats. Add new stats here if the NPC just hit 2+ scenes
+                        and behavior now matters to the story — see <World_Advancement_Protocol>.
+        REMOVE entry  → when NPC is permanently gone from the story (death, moved away, written out)
+                        OR when promoted to Partner (entry now lives in stat_data.Partner exclusively).
+
+      SUMMARY FIELD RULE — strictly enforced:
+        summary describes the CHARACTER: background, appearance, role, personality, standing.
+        summary does NOT describe what happened in scenes, when things occurred, or what was negotiated.
+        ❌ WRONG: "1572-04-24 ,  After arm wrestling,  accept Admiral role with three conditions..."
+        ✅ RIGHT: "Pradeshi pirate king，Depthsgrave resistance leader，leading 1200人+10 captured warships。
+                  10 years ago form alliance with Eleanor Castor. Dark skin with scar on the chest."
+        If scene events are significant → write a separate entry in World_Calc.Events, not here.
+
+      ── [ii] World_Calc.Events ───────────────────────────────────────────────
+      Record groundbreaking events that permanently alter Character lore, World State, or plot trajectory.
+      THRESHOLD: Only events significant enough to affect future story (deals struck, revelations, deaths,
+        major conflicts resolved, faction shifts, relationship turning points). Routine scenes do NOT qualify.
+      BEFORE WRITING: Search CURRENT_VARIABLE_DATA.World_Calc.Events for an existing entry on this topic.
+        MATCH FOUND → Summarize existing text (max 500 chars). APPEND new summary. NEVER overwrite past history.
+        NO MATCH    → Create new entry. Key = short descriptive label (no "." or "/"). Fields: Desc, Date.
+      Do NOT mix up Events with Quests — Quests track active objectives; Events log what permanently happened.
+
+      ── [iii] World_Calc.Locations ────────────────────────────────────────────
+      Track named locations that are significant to the story (recurring, plot-relevant, or newly discovered).
+      ADD when: a new location is visited for the first time and is likely to recur or matter to the story.
+      UPDATE when: a location changes meaningfully (destroyed, renovated, repurposed, ownership changed).
+      REMOVE when: a location is permanently gone from the story world.
+      Fields: name, region, description, notable_features. Keep description factual — not a scene log.
+      Mundane one-off locations (a random café, a passing street corner) do NOT need an entry.
+
+  15b. PARTNER FRIENDS: Run this check every scene — regardless of interaction depth.
+       TRIGGER: ANY named person (NPC or Partner) present in the same scene as this partner.
+       ELIGIBILITY (all must be true):
+         a) Must have a proper name. Skip generic roles ("Waitress", "Guard", "Clerk").
+         b) Other Partners: always eligible. Do NOT cross-check World_Calc.NPCs for them.
+         c) NPCs: eligible if in World_Calc.NPCs OR has lorebook/character profile OR referenced in <encounter_guide>.
+            If none apply, skip.
+            NOTE: Eligible but not yet in World_Calc.NPCs → add them there first (fast-track rule in <World_Advancement_Protocol>) before writing the Friends patch.
+       SCORE UPDATE RULES (only on DIRECT interaction — they spoke to/acted toward/reacted specifically to each other):
+         New entry:    FriendshipScore="10" (exact string, always). Update Mood.
+         Existing + :  add 5-10. Write as plain string (cap "100"). Update Mood.
+         Existing − :  subtract 5-15. Write as plain string (floor "0"). Update Mood.
+         Score hits "0": remove the entry (friendship ended).
+         SHARED WITNESS (both saw same event, no direct exchange between them): no score change.
+         MERE CO-PRESENCE (in scene, no notable exchange): no score change.
+
+       EXISTENCE CHECK (mandatory before every Friends JSONPatch op):
+         Look up /Partner/<NameKey>/Friends/<FriendKey> in CURRENT_VARIABLE_DATA.
+         Not exists → "add" with complete object: {"Name":"<Name>","FriendshipScore":"10","Mood":"<mood>"}
+         Exists     → "replace" at specific subfield path (e.g. .../FriendshipScore)
+         NEVER use "replace" on an entry not confirmed present in CURRENT_VARIABLE_DATA.
+
+       PARTNER-TO-PARTNER: When two Partners share a scene, run for EACH partner independently.
+         (e.g. Florene and Yuki → update Florene.Friends for Yuki AND Yuki.Friends for Florene)
+       No capacity limit.
+
+  16. Money: If spending occurred -- "Money: current X + delta Y = Z"
+
+  16b. PAYDAY: If in-game date has crossed the 1st of a new month since last reply:
+       - Mainchar: add Salary directly to Mainchar.Money (Salary is monthly)
+       - Each Partner with a Salary: add their Salary directly to their Money
+       - Once per month only. Do not double-deposit.
+
+  16c. PARTNER PRESENCE & PROFILE:
+       Is_present: Set to true when partner enters the scene or is encountered.
+         Set to false when partner leaves, scene ends without her, or story moves to a new location without her.
+         MUST stay consistent with the narrative.
+       TimeSinceLastSeen: Update ONLY when this partner meets or contacts {{user}} this scene.
+         Format: "YYYY-MM-DD HH:MM" — stamp the current World.Date+Time. Do NOT update for absent partners.
+       Identity / Occupation: If a story event changes the partner's identity or job
+         (e.g. promotion, career change, new title), update the field. Otherwise do not touch.
+
+  17. TRAIT GUARD: If you are about to patch Dominance, Confidence, Shyness, Playfulness, Kindness,
+      Patience, EmotionalStability, Impulsive, Curiosity, FlirtingStyle,
+      Initiative, IntensityPreference, or ControlPreference -- STOP. That is an error. (Partner Traits)
+      Also STOP if patching Mainchar.Charisma or Mainchar.SocialEnergy — these are Mainchar static traits.
+      EXCEPTIONS that allow Partner Trait change:
+        a) [ooc:] admin override.
+        b) The story repeatedly breaks the Trait until the existing value is no longer valid.
+        c) IDENTITY-LEVEL BOUNDARIES COLLAPSE (rare): A boundary tied to her core identity was crossed
+           in a way that logically invalidates one or more Traits. Example: lesbian partner with high
+           Dominance + ControlPreference + Confidence whose 'no intimacy with men' boundary collapses
+           by her actually having sex with {{user}}. The implicated Traits MUST drop (large shift -15 to -25)
+           to reflect the genuine personality shift. Apply ONLY when the boundary change cannot be
+           reconciled with current Trait values. Add ImportantEvents entry describing the shift.
+        Mainchar.Charisma and Mainchar.SocialEnergy can be changed ONLY by [ooc:] override.
+
+  17b. BOUNDARIES RENEGOTIATION — MANDATORY CHECK EVERY REPLY:
+       For EVERY partner in this scene, read her Boundaries from CURRENT_VARIABLE_DATA.
+       Ask: "Has PATH 1 or PATH 2 been triggered this reply?" NOT optional. NOT skipped even if scene seems unrelated.
+       Neither applies → write nothing. Either applies → patch immediately.
+       Omitting this check = error equivalent to forgetting step 2 (THOUGHTS).
+
+       PATH 1 — EXPLICIT RENEGOTIATION:
+         a) A clear narrative event THIS scene caused the partner to consciously revise a limit (said aloud, acted it out, or scene moment unambiguously signals it).
+         b) Change driven by story events — NOT by any stat value, RelationshipStage, or roll result.
+         c) Add ImportantEvents entry: what changed + in-world date/time.
+
+       PATH 2 — DE FACTO SUPERSESSION (no verbal renegotiation needed — ALL four must be true):
+         a) The specific condition in the boundary was already fulfilled or objectively surpassed by PRIOR story events (not this scene alone).
+            e.g. "Will not sleep with Rabbit without Charlotte's permission" → Charlotte consented in a prior scene = condition resolved.
+         b) Keeping the old text contradicts established story facts — not merely inconvenient. Factually impossible to still be in force = superseded. Merely inconvenient = NOT superseded.
+         c) Write a natural narrative beat in <gametxt> showing she has internalized the change (a thought, gesture, or offhand remark — not a formal renegotiation scene).
+         d) Add ImportantEvents entry: what the boundary evolved to and why.
+
+       ANTI-ABUSE GUARD:
+         PATH 2 requires objective story facts from prior scenes where the condition was directly addressed with her knowledge and no active objection.
+         "She seemed okay with it" or "the mood was right" = DENIED. Prior explicit story events addressing the condition directly = VALID.
+
+       Boundaries evolve — they do NOT disappear. New text MUST keep two-part format: 1 social sentence + 1 sexual sentence.
+
+  18. FINAL COMPLIANCE GATE (run LAST, cannot be skipped):
+      Before outputting JSONPatch, verify ALL are true:
+      - Step Ledger contains every step id: 1,2,3,4,4b,5,6,7,8,9,10,11,12,13,14,15,15b,16,16b,16c,17,17b.
+      - Every SKIPPED line includes explicit this-reply reason (not historical assumption).
+      - Step 14 includes per-quest completion decision for each active quest (Objective met: YES/NO).
+      - No rule was ignored due to prior-turn habit.
+      If any check fails: do not trust current draft; rerun checklist from step 0 before producing final JSONPatch.
+</Update_Analysis_Detail>

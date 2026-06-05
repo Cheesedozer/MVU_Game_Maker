@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Character Creation</title>
+</head>
+
+<body>
+    <style>
+        .mzsmb-container {
+            --text-primary: #f0e6ff;
+            --text-secondary: #d4a8ff;
+            --accent-primary: #c840ff;
+            --border-color: rgba(200, 64, 255, 0.3);
+            font-family: 'Segoe UI', sans-serif;
+            color: var(--text-primary);
+            background: linear-gradient(-45deg, #2a0060, #6a0dad, #b06abf, #d4a0c8);
+            background-size: 400% 400%;
+            animation: gradient-flow-gs 30s ease infinite;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 15px;
+            width: 100%;
+            box-sizing: border-box;
+            margin: 15px 0;
+        }
+
+        @keyframes gradient-flow-gs {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .mzsmb-header {
+            margin: 0 0 12px 0;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 8px;
+            color: #ffffff;
+            font-size: 1.2em;
+            font-weight: 700;
+        }
+
+        .mzsmb-sub {
+            margin: 0 0 16px 0;
+            color: var(--text-secondary);
+            font-size: 0.9em;
+        }
+
+        .mzsmb-form-group {
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+        }
+
+        .mzsmb-form-group label {
+            flex: 0 0 140px;
+            font-size: 0.95em;
+            color: var(--text-primary);
+        }
+
+        .mzsmb-input,
+        .mzsmb-select {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--border-color);
+            color: #f0e6ff;
+            border-radius: 4px;
+            padding: 6px 10px;
+            font-family: inherit;
+            font-size: 0.9em;
+            flex: 1;
+            max-width: 250px;
+        }
+
+        .mzsmb-input:focus,
+        .mzsmb-select:focus {
+            outline: none;
+            border-color: var(--accent-primary);
+            background: rgba(0, 0, 0, 0.5);
+        }
+
+        .mzsmb-hint {
+            font-size: 0.75em;
+            color: var(--text-secondary);
+            margin-left: 140px;
+            margin-top: -8px;
+            margin-bottom: 10px;
+        }
+
+        .mzsmb-save-btn {
+            background: rgba(200, 64, 255, 0.15);
+            color: #ffffff;
+            border: 1px solid var(--accent-primary);
+            border-radius: 4px;
+            padding: 10px 18px;
+            font-weight: 700;
+            font-size: 1.05em;
+            cursor: pointer;
+            transition: 0.2s;
+            width: 100%;
+            max-width: 420px;
+            margin-top: 8px;
+        }
+
+        .mzsmb-save-btn:hover:not(:disabled) {
+            background: rgba(200, 64, 255, 0.3);
+            box-shadow: 0 0 8px rgba(200, 64, 255, 0.4);
+        }
+
+        .mzsmb-save-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            border-color: rgba(255, 255, 255, 0.2);
+            color: #aaa;
+        }
+
+        .mzsmb-status {
+            margin-top: 10px;
+            color: #ffd54f;
+            font-size: 0.9em;
+            min-height: 18px;
+        }
+
+        gamestart,
+        GameStart {
+            display: none !important;
+        }
+    </style>
+
+    <div class="mzsmb-container">
+        <div class="mzsmb-header">Character Creation</div>
+        <p class="mzsmb-sub">Set up your identity before the story begins.</p>
+
+        <div class="mzsmb-form-group">
+            <label>Name:</label>
+            <input type="text" class="mzsmb-input gs-name" value="{{user}}" placeholder="Enter name">
+        </div>
+
+        <div class="mzsmb-form-group">
+            <label>Age:</label>
+            <input type="text" class="mzsmb-input gs-age" value="25" placeholder="Enter age" style="max-width: 100px;">
+        </div>
+
+        <div class="mzsmb-form-group">
+            <label>Gender:</label>
+            <select class="mzsmb-select gs-gender">
+                <option value="Male">Male</option>
+                <option value="Female">Female</option>
+            </select>
+        </div>
+
+        <div class="mzsmb-form-group">
+            <label>Race:</label>
+            <input type="text" class="mzsmb-input gs-race" value="Human" placeholder="Enter race">
+        </div>
+
+        <div class="mzsmb-form-group">
+            <label>Occupation:</label>
+            <input type="text" class="mzsmb-input gs-occ" value="Office Worker" placeholder="Enter occupation">
+        </div>
+
+        <div class="mzsmb-form-group">
+            <label>Charisma:</label>
+            <select class="mzsmb-select gs-cha">
+                <option value="30">Ugly (30)</option>
+                <option value="50" selected>Average (50)</option>
+                <option value="70">Above Average (70)</option>
+                <option value="80">Handsome (80)</option>
+                <option value="90">Sugar Daddy (90)</option>
+            </select>
+        </div>
+        <div class="mzsmb-hint">Affects social check DCs and how partners first perceive you.</div>
+
+        <div class="mzsmb-form-group">
+            <label>Social Energy:</label>
+            <select class="mzsmb-select gs-social">
+                <option value="20">Introvert (20) — drains quickly in social settings</option>
+                <option value="35">Reserved (35) — prefers small, trusted circles</option>
+                <option value="55" selected>Balanced (55) — comfortable either way</option>
+                <option value="70">Outgoing (70) — energized by people</option>
+                <option value="90">Social Butterfly (90) — thrives in crowds</option>
+            </select>
+        </div>
+        <div class="mzsmb-hint">Affects DC modifiers for all social interactions.</div>
+
+        <div class="mzsmb-form-group">
+            <label>Monthly Salary:</label>
+            <select class="mzsmb-select gs-salary">
+                <option value="1700000">Ɉ1,700,000 — Tycoon</option>
+                <option value="860000">Ɉ860,000 — Upper class</option>
+                <option value="510000">Ɉ510,000 — Middle class</option>
+                <option value="360000" selected>Ɉ360,000 — Lower-Middle class</option>
+                <option value="250000">Ɉ250,000 — Working poor</option>
+                <option value="0">Ɉ0 — Jobless</option>
+            </select>
+        </div>
+        <div class="mzsmb-hint">Affects social check DC and monthly income deposits (Ɉ = Japon Mark, JPM).</div>
+
+        <button class="mzsmb-save-btn" onclick="window.mzsmbGameStart.save(this)">Confirm & Start Story</button>
+        <div class="mzsmb-status"></div>
+    </div>
+
+    <script>
+        (function () {
+            if (!window.mzsmbGameStart) {
+                window.mzsmbGameStart = {
+
+                    parseStartedFlag: function (value) {
+                        const raw = Array.isArray(value) ? value[0] : value;
+                        if (raw === true) return true;
+                        if (raw === false || raw === null || raw === undefined) return false;
+                        if (typeof raw === 'number') return raw === 1;
+                        if (typeof raw === 'string') {
+                            const normalized = raw.trim().toLowerCase();
+                            return normalized === 'true' || normalized === '1' || normalized === 'yes' || normalized === 'on';
+                        }
+                        return false;
+                    },
+
+                    isGameStartedInVars: function (vars) {
+                        if (!vars || !vars.stat_data) return false;
+                        return this.parseStartedFlag(vars.stat_data.GameStarted);
+                    },
+
+                    lockContainer: function (container) {
+                        const sb = container.querySelector('.mzsmb-save-btn');
+                        container.dataset.locked = 'true';
+                        if (sb) {
+                            sb.dataset.locked = 'true';
+                            sb.disabled = true;
+                            sb.textContent = 'Story Already Started';
+                        }
+                        container.querySelectorAll('.gs-name, .gs-age, .gs-gender, .gs-race, .gs-occ, .gs-cha, .gs-social, .gs-salary').forEach(el => {
+                            el.disabled = true;
+                        });
+                    },
+
+                    save: async function (btn) {
+                        const container = btn.closest('.mzsmb-container');
+                        if (!container) return;
+
+                        const statusEl = container.querySelector('.mzsmb-status');
+                        const writeStatus = (text, color) => {
+                            if (!statusEl) return;
+                            statusEl.textContent = text;
+                            if (color) statusEl.style.color = color;
+                        };
+
+                        if (container.dataset.locked === 'true' || btn.dataset.locked === 'true') {
+                            this.lockContainer(container);
+                            writeStatus('Character already created. Changes are locked.', '#d4a8ff');
+                            return;
+                        }
+
+                        btn.disabled = true;
+                        writeStatus('Saving character data...', '#d4a8ff');
+
+                        const nameEl   = container.querySelector('.gs-name');
+                        const ageEl    = container.querySelector('.gs-age');
+                        const genderEl = container.querySelector('.gs-gender');
+                        const raceEl   = container.querySelector('.gs-race');
+                        const occEl    = container.querySelector('.gs-occ');
+                        const chaEl    = container.querySelector('.gs-cha');
+                        const socEl    = container.querySelector('.gs-social');
+                        const salEl    = container.querySelector('.gs-salary');
+
+                        const nameVal   = nameEl   ? nameEl.value.trim()   || '{{user}}'      : '{{user}}';
+                        const ageVal    = ageEl    ? ageEl.value.trim()    || '25'            : '25';
+                        const genderVal = genderEl ? genderEl.value                           : 'Male';
+                        const raceVal   = raceEl   ? raceEl.value.trim()   || 'Human'        : 'Human';
+                        const occVal    = occEl    ? occEl.value.trim()    || 'Office Worker' : 'Office Worker';
+                        const chaVal    = chaEl    ? parseInt(chaEl.value)  || 80             : 80;
+                        const socVal    = socEl    ? parseInt(socEl.value)  || 55             : 55;
+                        const salVal    = salEl    ? parseInt(salEl.value)  || 360000         : 360000;
+
+                        const context = { type: 'message', message_id: (typeof getCurrentMessageId === 'function') ? getCurrentMessageId() : -1 };
+
+                        try {
+                            let targetWindow = null;
+                            if (typeof window.insertOrAssignVariables === 'function') targetWindow = window;
+                            else if (window.parent && typeof window.parent.insertOrAssignVariables === 'function') targetWindow = window.parent;
+
+                            let updateVariablesWith = null;
+                            if (typeof window.updateVariablesWith === 'function') updateVariablesWith = window.updateVariablesWith;
+                            else if (window.parent && typeof window.parent.updateVariablesWith === 'function') updateVariablesWith = window.parent.updateVariablesWith;
+
+                            const _ = targetWindow ? targetWindow._ : window._;
+
+                            const updateLogic = (vars) => {
+                                if (!vars) vars = {};
+                                if (!vars.stat_data) vars.stat_data = {};
+                                if (!vars.stat_data.Mainchar) vars.stat_data.Mainchar = {};
+
+                                const mc = vars.stat_data.Mainchar;
+
+                                if (_) {
+                                    _.set(mc, 'Name[0]',         nameVal);
+                                    _.set(mc, 'Age[0]',          ageVal);
+                                    _.set(mc, 'Gender[0]',       genderVal);
+                                    _.set(mc, 'Race[0]',         raceVal);
+                                    _.set(mc, 'Occupation[0]',   occVal);
+                                    _.set(mc, 'Charisma[0]',     chaVal);
+                                    _.set(mc, 'SocialEnergy[0]', socVal);
+                                    _.set(mc, 'Salary[0]',       salVal);  // Tuple: [value, "Salary"]
+                                    _.set(vars.stat_data, 'GameStarted', true);
+                                } else {
+                                    const setProp = (key, val, label) => {
+                                        if (!mc[key]) mc[key] = [val, label];
+                                        else mc[key][0] = val;
+                                    };
+                                    setProp('Name',         nameVal,   'Name');
+                                    setProp('Age',          ageVal,    'Age');
+                                    setProp('Gender',       genderVal, 'Gender');
+                                    setProp('Race',         raceVal,   'Race');
+                                    setProp('Occupation',   occVal,    'Occupation');
+                                    setProp('Charisma',     chaVal,    'Charisma');
+                                    setProp('SocialEnergy', socVal,    'Social Energy');
+                                    setProp('Salary',       salVal,    'Salary');
+                                    vars.stat_data.GameStarted = true;
+                                }
+
+                                return vars;
+                            };
+
+                            if (updateVariablesWith) {
+                                await updateVariablesWith(updateLogic, { type: 'chat' });
+                                if (context.message_id >= 0) {
+                                    await updateVariablesWith(updateLogic, context);
+                                }
+                            } else if (targetWindow && typeof targetWindow.insertOrAssignVariables === 'function') {
+                                let currentVars = {};
+                                if (typeof targetWindow.getVariables === 'function') {
+                                    currentVars = targetWindow.getVariables(context) || targetWindow.getVariables({ type: 'chat' }) || {};
+                                }
+                                const updatedVars = updateLogic(JSON.parse(JSON.stringify(currentVars)));
+                                const payload = { stat_data: updatedVars.stat_data };
+                                await targetWindow.insertOrAssignVariables(payload, { type: 'chat' });
+                                if (context.message_id >= 0) {
+                                    await targetWindow.insertOrAssignVariables(payload, { type: 'message', message_id: context.message_id });
+                                }
+                            } else {
+                                writeStatus('Error: No save method available in context environment.', '#ff8a80');
+                                btn.disabled = false;
+                                return;
+                            }
+
+                            writeStatus('Character saved! Type your first message to begin the story.', '#50fa7b');
+                            this.lockContainer(container);
+                        } catch (err) {
+                            console.error('[MZSMB] Error saving gamestart data:', err);
+                            writeStatus(`Save Error: ${err.message}`, '#ff8a80');
+                            btn.disabled = false;
+                        }
+                    }
+                };
+            }
+
+            // Initialize lock state on load
+            setTimeout(() => {
+                document.querySelectorAll('.mzsmb-container').forEach(c => {
+                    try {
+                        const targetWindow = typeof window.getVariables === 'function' ? window
+                            : (window.parent && typeof window.parent.getVariables === 'function' ? window.parent : null);
+                        if (targetWindow) {
+                            const currentMessageId = (typeof getCurrentMessageId === 'function') ? getCurrentMessageId() : -1;
+                            const chatVars = targetWindow.getVariables({ type: 'chat' }) || {};
+                            const msgVars  = (currentMessageId >= 0)
+                                ? (targetWindow.getVariables({ type: 'message', message_id: currentMessageId }) || {})
+                                : {};
+
+                            const started = window.mzsmbGameStart.isGameStartedInVars(chatVars)
+                                || window.mzsmbGameStart.isGameStartedInVars(msgVars);
+
+                            if (started) {
+                                window.mzsmbGameStart.lockContainer(c);
+                                const statusEl = c.querySelector('.mzsmb-status');
+                                if (statusEl) {
+                                    statusEl.textContent = 'Character already created.';
+                                    statusEl.style.color = '#d4a8ff';
+                                }
+                            }
+                        }
+                    } catch (e) {}
+                });
+            }, 300);
+
+        })();
+    </script>
+</body>
+
+</html>
+```

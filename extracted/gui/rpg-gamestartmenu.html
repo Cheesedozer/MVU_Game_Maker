@@ -1,0 +1,705 @@
+<!DOCTYPE html>
+<html lang="utf-8">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Level Up Panel</title>
+</head>
+
+<body>
+    <style>
+        .mzsmb-container {
+            --text-primary: #e0f7fa;
+            --text-secondary: #81d4fa;
+            --accent-primary: #00e5ff;
+            --border-color: rgba(0, 229, 255, 0.3);
+            font-family: 'Segoe UI', sans-serif;
+            color: var(--text-primary);
+            background: linear-gradient(-45deg, #001f3f, #003366, #006064, #013243);
+            background-size: 400% 400%;
+            animation: gradient-flow-gs 30s ease infinite;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 15px;
+            width: 100%;
+            box-sizing: border-box;
+            margin: 15px 0;
+        }
+
+        @keyframes gradient-flow-gs {
+            0% {
+                background-position: 0% 50%;
+            }
+
+            50% {
+                background-position: 100% 50%;
+            }
+
+            100% {
+                background-position: 0% 50%;
+            }
+        }
+
+        .mzsmb-header {
+            margin: 0 0 12px 0;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 8px;
+            color: var(--accent-primary);
+            font-size: 1.2em;
+            font-weight: 700;
+        }
+
+        .mzsmb-sub {
+            margin: 0 0 16px 0;
+            color: var(--text-secondary);
+            font-size: 0.9em;
+        }
+
+        .mzsmb-form-group {
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+        }
+
+        .mzsmb-form-group label {
+            flex: 0 0 125px;
+            font-size: 0.95em;
+            color: var(--text-primary);
+        }
+
+        .mzsmb-input,
+        .mzsmb-select {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--border-color);
+            color: #d7f3ff;
+            border-radius: 4px;
+            padding: 6px 10px;
+            font-family: inherit;
+            font-size: 0.9em;
+            flex: 1;
+            max-width: 250px;
+        }
+
+        .mzsmb-input:focus,
+        .mzsmb-select:focus {
+            outline: none;
+            border-color: var(--accent-primary);
+            background: rgba(0, 0, 0, 0.5);
+        }
+
+        .mzsmb-stats-container {
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(0, 229, 255, 0.15);
+            border-radius: 6px;
+            padding: 12px;
+            margin-bottom: 15px;
+            max-width: 385px;
+        }
+
+        .mzsmb-stats-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            font-weight: bold;
+            color: var(--accent-primary);
+        }
+
+        .mzsmb-stat-row {
+            display: flex;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .mzsmb-stat-name {
+            flex: 0 0 110px;
+            font-size: 0.9em;
+        }
+
+        .mzsmb-stat-controls {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .mzsmb-stat-btn {
+            background: rgba(0, 229, 255, 0.1);
+            color: #00e5ff;
+            border: 1px solid rgba(0, 229, 255, 0.3);
+            border-radius: 4px;
+            width: 28px;
+            height: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 0;
+            transition: 0.15s;
+        }
+
+        .mzsmb-stat-btn:hover:not(:disabled) {
+            background: rgba(0, 229, 255, 0.25);
+        }
+
+        .mzsmb-stat-btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+            border-color: rgba(255, 255, 255, 0.1);
+            color: rgba(255, 255, 255, 0.3);
+        }
+
+        .mzsmb-stat-val {
+            width: 30px;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        .mzsmb-save-btn {
+            background: rgba(0, 229, 255, 0.15);
+            color: #00e5ff;
+            border: 1px solid var(--accent-primary);
+            border-radius: 4px;
+            padding: 10px 18px;
+            font-weight: 700;
+            font-size: 1.05em;
+            cursor: pointer;
+            transition: 0.2s;
+            width: 100%;
+            max-width: 385px;
+            margin-top: 5px;
+        }
+
+        .mzsmb-save-btn:hover:not(:disabled) {
+            background: rgba(0, 229, 255, 0.3);
+            box-shadow: 0 0 8px rgba(0, 229, 255, 0.4);
+        }
+
+        .mzsmb-save-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            border-color: rgba(255, 255, 255, 0.2);
+            color: #aaa;
+        }
+
+        .mzsmb-status {
+            margin-top: 10px;
+            color: #ffd54f;
+            font-size: 0.9em;
+            min-height: 18px;
+        }
+
+        gamestart,
+        GameStart {
+            display: none !important;
+        }
+    </style>
+
+    <div class="mzsmb-container">
+        <div class="mzsmb-header">Character Creation Setup</div>
+        <p class="mzsmb-sub">Setup your starting attributes, equipment, and identity.</p>
+
+        <div class="mzsmb-form-group">
+            <label>Name:</label>
+            <input type="text" class="mzsmb-input gs-name" value="{{user}}" placeholder="Enter name">
+        </div>
+
+        <div class="mzsmb-form-group">
+            <label>Age:</label>
+            <input type="text" class="mzsmb-input gs-age" value="18" placeholder="Enter age" style="max-width: 100px;">
+        </div>
+
+        <div class="mzsmb-form-group">
+            <label>Gender:</label>
+            <select class="mzsmb-select gs-gender">
+                <option value="Male">Male</option>
+                <option value="Female">Female</option>
+            </select>
+        </div>
+
+        <div class="mzsmb-form-group">
+            <label>Race:</label>
+            <input type="text" class="mzsmb-input gs-race" value="Human" placeholder="Enter race">
+        </div>
+
+        <div class="mzsmb-form-group">
+            <label>Occupation:</label>
+            <input type="text" class="mzsmb-input gs-occ" value="Spellsword" placeholder="Enter occupation">
+        </div>
+
+        <div class="mzsmb-form-group">
+            <label>Starting Weapon:</label>
+            <select class="mzsmb-select gs-weapon">
+                <option value="sword">Beginner Sword</option>
+                <option value="staff">Beginner Staff</option>
+            </select>
+        </div>
+
+        <div class="mzsmb-stats-container">
+            <div class="mzsmb-stats-header">
+                <span>Core Attributes</span>
+                <span>Points Remaining: <span class="gs-points">30</span></span>
+            </div>
+
+            <!-- Harcoded layout to render immediately without waiting for JS injection! -->
+            <div class="gs-stat-rows">
+                <div class="mzsmb-stat-row" data-stat="str">
+                    <div class="mzsmb-stat-name">Strength</div>
+                    <div class="mzsmb-stat-controls">
+                        <button class="mzsmb-stat-btn gs-btn-minus"
+                            onclick="window.mzsmbGameStart.adjust(this, 'str', -1)">-</button>
+                        <div class="mzsmb-stat-val">5</div>
+                        <button class="mzsmb-stat-btn gs-btn-plus"
+                            onclick="window.mzsmbGameStart.adjust(this, 'str', 1)">+</button>
+                    </div>
+                </div>
+                <div class="mzsmb-stat-row" data-stat="agi">
+                    <div class="mzsmb-stat-name">Agility</div>
+                    <div class="mzsmb-stat-controls">
+                        <button class="mzsmb-stat-btn gs-btn-minus"
+                            onclick="window.mzsmbGameStart.adjust(this, 'agi', -1)">-</button>
+                        <div class="mzsmb-stat-val">5</div>
+                        <button class="mzsmb-stat-btn gs-btn-plus"
+                            onclick="window.mzsmbGameStart.adjust(this, 'agi', 1)">+</button>
+                    </div>
+                </div>
+                <div class="mzsmb-stat-row" data-stat="con">
+                    <div class="mzsmb-stat-name">Constitution</div>
+                    <div class="mzsmb-stat-controls">
+                        <button class="mzsmb-stat-btn gs-btn-minus"
+                            onclick="window.mzsmbGameStart.adjust(this, 'con', -1)">-</button>
+                        <div class="mzsmb-stat-val">5</div>
+                        <button class="mzsmb-stat-btn gs-btn-plus"
+                            onclick="window.mzsmbGameStart.adjust(this, 'con', 1)">+</button>
+                    </div>
+                </div>
+                <div class="mzsmb-stat-row" data-stat="int">
+                    <div class="mzsmb-stat-name">Intelligence</div>
+                    <div class="mzsmb-stat-controls">
+                        <button class="mzsmb-stat-btn gs-btn-minus"
+                            onclick="window.mzsmbGameStart.adjust(this, 'int', -1)">-</button>
+                        <div class="mzsmb-stat-val">5</div>
+                        <button class="mzsmb-stat-btn gs-btn-plus"
+                            onclick="window.mzsmbGameStart.adjust(this, 'int', 1)">+</button>
+                    </div>
+                </div>
+                <div class="mzsmb-stat-row" data-stat="wis">
+                    <div class="mzsmb-stat-name">Wisdom</div>
+                    <div class="mzsmb-stat-controls">
+                        <button class="mzsmb-stat-btn gs-btn-minus"
+                            onclick="window.mzsmbGameStart.adjust(this, 'wis', -1)">-</button>
+                        <div class="mzsmb-stat-val">5</div>
+                        <button class="mzsmb-stat-btn gs-btn-plus"
+                            onclick="window.mzsmbGameStart.adjust(this, 'wis', 1)">+</button>
+                    </div>
+                </div>
+            </div>
+
+            <div style="margin-top: 15px; border-top: 1px solid rgba(0,229,255,0.2); padding-top: 10px;">
+                <div class="mzsmb-form-group" style="margin-bottom: 0;">
+                    <label style="flex: 0 0 110px;">Charisma:</label>
+                    <input type="number" class="mzsmb-input gs-cha" value="80" style="max-width: 80px;" min="1"
+                        max="100">
+                </div>
+                <div style="font-size: 0.75em; color: var(--text-secondary); margin-left: 110px; margin-top: 4px;">
+                    Charisma starts at 80 and is not bound by points limit.
+                </div>
+            </div>
+        </div>
+
+        <button class="mzsmb-save-btn" onclick="window.mzsmbGameStart.save(this)">Confirm & Start Journey</button>
+        <div class="mzsmb-status"></div>
+    </div>
+
+    <script>
+        (function () {
+            if (!window.mzsmbGameStart) {
+                window.mzsmbGameStart = {
+                    MAX_POINTS: 30,
+                    BASE_STAT: 5,
+
+                    parseStartedFlag: function (value) {
+                        const raw = Array.isArray(value) ? value[0] : value;
+                        if (raw === true) return true;
+                        if (raw === false || raw === null || raw === undefined) return false;
+                        if (typeof raw === 'number') return raw === 1;
+                        if (typeof raw === 'string') {
+                            const normalized = raw.trim().toLowerCase();
+                            return normalized === 'true' || normalized === '1' || normalized === 'yes' || normalized === 'on';
+                        }
+                        return false;
+                    },
+
+                    isGameStartedInVars: function (vars) {
+                        if (!vars || !vars.stat_data) return false;
+                        return this.parseStartedFlag(vars.stat_data.GameStarted);
+                    },
+
+                    recalcAll: function (container) {
+                        let spent = 0;
+                        const rows = container.querySelectorAll('.mzsmb-stat-row');
+                        rows.forEach(row => {
+                            const valEl = row.querySelector('.mzsmb-stat-val');
+                            if (!valEl) return;
+                            let val = parseInt(valEl.textContent) || this.BASE_STAT;
+                            spent += (val - this.BASE_STAT);
+                        });
+
+                        const rem = this.MAX_POINTS - spent;
+                        const pointsEl = container.querySelector('.gs-points');
+                        if (pointsEl) pointsEl.textContent = rem;
+
+                        const sb = container.querySelector('.mzsmb-save-btn');
+                        const isLocked = container.dataset.locked === 'true' || (sb && sb.dataset.locked === 'true');
+
+                        if (isLocked) {
+                            rows.forEach(row => {
+                                const mb = row.querySelector('.gs-btn-minus');
+                                const pb = row.querySelector('.gs-btn-plus');
+                                if (mb) mb.disabled = true;
+                                if (pb) pb.disabled = true;
+                            });
+
+                            const lockInputs = container.querySelectorAll('.gs-name, .gs-age, .gs-gender, .gs-race, .gs-occ, .gs-weapon, .gs-cha');
+                            lockInputs.forEach(el => {
+                                el.disabled = true;
+                            });
+
+                            if (sb) {
+                                sb.dataset.locked = 'true';
+                                sb.disabled = true;
+                                if (!sb.textContent || sb.textContent.includes('Confirm') || sb.textContent.includes('Spend') || sb.textContent.includes('Too many')) {
+                                    sb.textContent = 'Journey Already Started';
+                                }
+                            }
+
+                            return rem;
+                        }
+
+                        rows.forEach(row => {
+                            const valEl = row.querySelector('.mzsmb-stat-val');
+                            let val = parseInt(valEl.textContent) || this.BASE_STAT;
+
+                            const mb = row.querySelector('.gs-btn-minus');
+                            const pb = row.querySelector('.gs-btn-plus');
+                            if (mb) mb.disabled = val <= this.BASE_STAT;
+                            if (pb) pb.disabled = rem <= 0;
+                        });
+
+                        if (sb && !sb.dataset.locked) {
+                            sb.disabled = rem !== 0;
+                            if (rem > 0) sb.textContent = `Spend ${rem} more points to confirm`;
+                            else if (rem < 0) sb.textContent = `Too many points spent!`;
+                            else sb.textContent = "Confirm & Start Journey";
+                        }
+
+                        return rem;
+                    },
+
+                    adjust: function (btn, stat, delta) {
+                        const container = btn.closest('.mzsmb-container');
+                        if (!container) return;
+                        if (container.dataset.locked === 'true') return;
+
+                        const saveBtn = container.querySelector('.mzsmb-save-btn');
+                        if (saveBtn && saveBtn.dataset.locked === 'true') return;
+
+                        const row = container.querySelector(`.mzsmb-stat-row[data-stat="${stat}"]`);
+                        if (!row) return;
+
+                        const valEl = row.querySelector('.mzsmb-stat-val');
+                        if (!valEl) return;
+
+                        let val = parseInt(valEl.textContent) || this.BASE_STAT;
+
+                        if (delta < 0) {
+                            if (val > this.BASE_STAT) {
+                                valEl.textContent = String(val - 1);
+                                this.recalcAll(container);
+                            }
+                        } else if (delta > 0) {
+                            const rem = this.recalcAll(container);
+                            if (rem > 0) {
+                                valEl.textContent = String(val + 1);
+                                this.recalcAll(container);
+                            }
+                        }
+                    },
+
+                    save: async function (btn) {
+                        const container = btn.closest('.mzsmb-container');
+                        if (!container) return;
+
+                        const statusEl = container.querySelector('.mzsmb-status');
+                        const writeStatus = (text, color) => {
+                            if (!statusEl) return;
+                            statusEl.textContent = text;
+                            if (color) statusEl.style.color = color;
+                        };
+
+                        if (container.dataset.locked === 'true' || btn.dataset.locked === 'true') {
+                            btn.disabled = true;
+                            btn.dataset.locked = 'true';
+                            btn.textContent = 'Journey Already Started';
+                            writeStatus('Character already created. Changes are locked.', '#81d4fa');
+                            this.recalcAll(container);
+                            return;
+                        }
+
+                        if (!btn.disabled) { // Only disable if not already disabled
+                            btn.disabled = true;
+                        }
+
+                        const rem = this.recalcAll(container);
+                        if (rem !== 0) {
+                            writeStatus('Error: You must spend exactly all points.', '#ff8a80');
+                            btn.disabled = false; // Re-enable button on error
+                            return;
+                        }
+
+                        writeStatus('Saving character data...', '#81d4fa');
+
+                        const nameEl = container.querySelector('.gs-name');
+                        const ageEl = container.querySelector('.gs-age');
+                        const genderEl = container.querySelector('.gs-gender');
+                        const raceEl = container.querySelector('.gs-race');
+                        const occEl = container.querySelector('.gs-occ');
+                        const wepEl = container.querySelector('.gs-weapon');
+                        const chaEl = container.querySelector('.gs-cha');
+
+                        const nameVal = nameEl ? nameEl.value.trim() || '{{user}}' : '{{user}}';
+                        const ageVal = ageEl ? ageEl.value.trim() || '18' : '18';
+                        const genderVal = genderEl ? genderEl.value : 'Male';
+                        const raceVal = raceEl ? raceEl.value.trim() || 'Human' : 'Human';
+                        const occVal = occEl ? occEl.value.trim() || 'Spellsword' : 'Spellsword';
+                        const wepVal = wepEl ? wepEl.value : 'sword';
+                        const chaVal = chaEl ? parseInt(chaEl.value) || 80 : 80;
+
+                        const statsObj = {};
+                        const rows = container.querySelectorAll('.mzsmb-stat-row');
+                        rows.forEach(row => {
+                            const k = row.dataset.stat;
+                            const valEl = row.querySelector('.mzsmb-stat-val');
+                            statsObj[k] = valEl ? (parseInt(valEl.textContent) || this.BASE_STAT) : this.BASE_STAT;
+                        });
+
+                        const BASE_STAT = this.BASE_STAT;
+                        const context = { type: 'message', message_id: (typeof getCurrentMessageId === 'function') ? getCurrentMessageId() : -1 };
+
+                        try {
+                            let targetWindow = null;
+                            if (typeof window.insertOrAssignVariables === 'function') targetWindow = window;
+                            else if (window.parent && typeof window.parent.insertOrAssignVariables === 'function') targetWindow = window.parent;
+
+                            let updateVariablesWith = null;
+                            if (typeof window.updateVariablesWith === 'function') updateVariablesWith = window.updateVariablesWith;
+                            else if (window.parent && typeof window.parent.updateVariablesWith === 'function') updateVariablesWith = window.parent.updateVariablesWith;
+
+                            const _ = targetWindow ? targetWindow._ : window._;
+
+                            const updateLogic = (vars) => {
+                                if (!vars) vars = {};
+                                if (!vars.stat_data) vars.stat_data = {};
+                                if (!vars.stat_data.Mainchar) vars.stat_data.Mainchar = {};
+
+                                const mc = vars.stat_data.Mainchar;
+
+                                if (_) {
+                                    _.set(mc, 'Name[0]', nameVal);
+                                    _.set(mc, 'Age[0]', ageVal);
+                                    _.set(mc, 'Gender[0]', genderVal);
+                                    _.set(mc, 'Race[0]', raceVal);
+                                    _.set(mc, 'Occupation[0]', occVal);
+
+                                    ['str', 'agi', 'con', 'int', 'wis'].forEach(k => {
+                                        if (statsObj[k] === undefined) statsObj[k] = BASE_STAT;
+                                    });
+
+                                    _.set(mc, 'Strength[0]', statsObj.str);
+                                    _.set(mc, 'Agility[0]', statsObj.agi);
+                                    _.set(mc, 'Constitution[0]', statsObj.con);
+                                    _.set(mc, 'Intelligence[0]', statsObj.int);
+                                    _.set(mc, 'Wisdom[0]', statsObj.wis);
+                                    _.set(mc, 'Charisma[0]', chaVal);
+
+                                    _.set(mc, 'Core-points[0]', rem);
+                                    _.set(vars.stat_data, 'GameStarted', true);
+                                } else {
+                                    const setProp = (key, val, defaultLabel) => {
+                                        if (!mc[key]) mc[key] = [val, defaultLabel];
+                                        else mc[key][0] = val;
+                                    };
+
+                                    setProp('Name', nameVal, 'Name');
+                                    setProp('Age', ageVal, 'Age');
+                                    setProp('Gender', genderVal, 'Gender');
+                                    setProp('Race', raceVal, 'Race');
+                                    setProp('Occupation', occVal, 'Occupation');
+
+                                    setProp('Strength', statsObj.str || BASE_STAT, 'Strength');
+                                    setProp('Agility', statsObj.agi || BASE_STAT, 'Agility');
+                                    setProp('Constitution', statsObj.con || BASE_STAT, 'Constitution');
+                                    setProp('Intelligence', statsObj.int || BASE_STAT, 'Intelligence');
+                                    setProp('Wisdom', statsObj.wis || BASE_STAT, 'Wisdom');
+                                    setProp('Charisma', chaVal, 'Charisma');
+
+                                    setProp('Core-points', rem, 'Unassigned Points');
+                                    vars.stat_data.GameStarted = true;
+                                }
+
+                                if (!mc.Inventory) mc.Inventory = {};
+                                if (!mc.Equipment) mc.Equipment = {};
+
+                                // Explicitly clear both from BOTH Inventory and Equipment to ensure no duplicates if they switch back and forth
+                                delete mc.Inventory["Beginner Sword"];
+                                delete mc.Inventory["Beginner Staff"];
+                                delete mc.Equipment["Beginner Sword"];
+                                delete mc.Equipment["Beginner Staff"];
+
+                                if (wepVal === 'sword') {
+                                    mc.Inventory["Beginner Sword"] = {
+                                        Type: "Weapon",
+                                        Qty: 1,
+                                        Rarity: "Common",
+                                        Slot: "Hand",
+                                        WeaponDamage: 5,
+                                        Desc: "Lv 1. Common. +5 Physical Damage. Beginner Sword"
+                                    };
+                                } else {
+                                    mc.Inventory["Beginner Staff"] = {
+                                        Type: "Weapon",
+                                        Qty: 1,
+                                        Rarity: "Common",
+                                        Slot: "Hand",
+                                        WeaponMagDamage: 5,
+                                        Desc: "Lv 1. Common. +5 Magic Damage. Beginner Staff"
+                                    };
+                                }
+
+                                const Lvl = 1;
+                                const Str = statsObj.str || BASE_STAT;
+                                const Con = statsObj.con || BASE_STAT;
+                                const Agi = statsObj.agi || BASE_STAT;
+                                const Int = statsObj.int || BASE_STAT;
+                                const Wis = statsObj.wis || BASE_STAT;
+
+                                const Hp_max = Math.floor(20 + (Con * 3) + (Lvl * 6));
+                                const Sta_max = Math.floor((50 + (Con * 3) + (Agi * 2) + Math.floor((Lvl * 5) / 3)));
+                                const Mp_max = Math.floor((50 + (Int * 4) + (Wis * 2) + (Lvl * 5)) / 3);
+
+                                const P_Atk = Math.floor((Str * 2) + (Lvl * 2));
+                                const M_Atk = Math.floor((Int * 2) + (Lvl * 2));
+                                const P_Def = Math.floor((Con / 2) + (Lvl * 3));
+                                const M_Def = Math.floor((Wis / 2) + (Lvl * 3));
+                                const M_Ast = Math.floor((Wis * 1.5) + (Int * 0.5) + (Lvl * 1.5));
+
+                                const setDerived = (key, val, label) => {
+                                    if (_) {
+                                        if (mc[key] === undefined) {
+                                            _.set(mc, key, [val, label]);
+                                        } else {
+                                            _.set(mc, `${key}[0]`, val);
+                                        }
+                                    } else {
+                                        if (!mc[key]) mc[key] = [val, label];
+                                        else mc[key][0] = val;
+                                    }
+                                };
+
+                                setDerived('Level', Lvl, 'Level');
+                                setDerived('Hp_max', Hp_max, 'Max HP');
+                                setDerived('Hp_curr', Hp_max, 'Current HP');
+                                setDerived('Sta_max', Sta_max, 'Max Stamina');
+                                setDerived('Sta_curr', Sta_max, 'Current Stamina');
+                                setDerived('Mp_max', Mp_max, 'Max MP');
+                                setDerived('Mp_curr', Mp_max, 'Current MP');
+                                setDerived('Physical_attack', P_Atk, 'Physical Attack');
+                                setDerived('Magic_attack', M_Atk, 'Magic Attack');
+                                setDerived('Physical_defense', P_Def, 'Physical Defense');
+                                setDerived('Magic_defense', M_Def, 'Magic Defense');
+                                setDerived('Magic_assist', M_Ast, 'Magic Support');
+
+                                return vars;
+                            };
+
+                            if (updateVariablesWith) {
+                                // Keep chat scope in sync so reload checks are consistent.
+                                await updateVariablesWith(updateLogic, { type: 'chat' });
+                                if (context.message_id >= 0) {
+                                    await updateVariablesWith(updateLogic, context);
+                                }
+                            } else if (targetWindow && typeof targetWindow.insertOrAssignVariables === 'function') {
+                                // Fallback for standard STscript variables
+                                let currentVars = {};
+                                if (typeof targetWindow.getVariables === 'function') {
+                                    currentVars = targetWindow.getVariables(context) || targetWindow.getVariables({ type: 'chat' }) || {};
+                                }
+                                const updatedVars = updateLogic(JSON.parse(JSON.stringify(currentVars)));
+
+                                const payload = { stat_data: updatedVars.stat_data };
+                                await targetWindow.insertOrAssignVariables(payload, { type: 'chat' });
+                                if (context.message_id >= 0) {
+                                    await targetWindow.insertOrAssignVariables(payload, { type: 'message', message_id: context.message_id });
+                                }
+                            } else {
+                                writeStatus('Error: No save method available in context environment.', '#ff8a80');
+                                btn.disabled = false;
+                                return;
+                            }
+
+                            writeStatus('Character data successfully saved! You can now Type your first message to start the game', '#50fa7b');
+                            container.dataset.locked = "true";
+                            btn.dataset.locked = "true";
+                            btn.disabled = true;
+                            btn.textContent = "Journey Started";
+                            this.recalcAll(container);
+                        } catch (err) {
+                            console.error('[MZSMB] Error saving gamestart data:', err);
+                            writeStatus(`Save Error: ${err.message}`, '#ff8a80');
+                            btn.disabled = false;
+                        }
+                    }
+                };
+            }
+
+            // Initialize state visually for all containers on load
+            setTimeout(() => {
+                document.querySelectorAll('.mzsmb-container').forEach(c => {
+                    const sb = c.querySelector('.mzsmb-save-btn');
+                    if (sb) {
+                        try {
+                            const targetWindow = typeof window.getVariables === 'function' ? window : (window.parent && typeof window.parent.getVariables === 'function' ? window.parent : null);
+                            if (targetWindow) {
+                                const currentMessageId = (typeof getCurrentMessageId === 'function') ? getCurrentMessageId() : -1;
+                                const chatVars = targetWindow.getVariables({ type: 'chat' }) || {};
+                                const msgVars = (currentMessageId >= 0)
+                                    ? (targetWindow.getVariables({ type: 'message', message_id: currentMessageId }) || {})
+                                    : {};
+
+                                const started = window.mzsmbGameStart.isGameStartedInVars(chatVars)
+                                    || window.mzsmbGameStart.isGameStartedInVars(msgVars);
+
+                                if (started) {
+                                    c.dataset.locked = "true";
+                                    sb.dataset.locked = "true";
+                                    sb.disabled = true;
+                                    sb.textContent = "Journey Already Started";
+                                    const statusEl = c.querySelector('.mzsmb-status');
+                                    if (statusEl) {
+                                         statusEl.textContent = 'Character already created.';
+                                         statusEl.style.color = '#81d4fa';
+                                    }
+                                }
+                            }
+                        } catch (e) {}
+                    }
+                    window.mzsmbGameStart.recalcAll(c);
+                });
+            }, 300);
+
+        })();
+    </script>
+</body>
+
+</html>
+```

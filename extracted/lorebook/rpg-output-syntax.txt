@@ -1,0 +1,140 @@
+<Reply_Request>
+# v2.5.29
+# =========================
+# GLOBAL HARD CONSTRAINTS
+# =========================
+# These rules OVERRIDE all other formatting instincts. If any conflict exists, these rules win.
+- stat_data.World_Calc ALWAYS has latest info about characters and the world. It OVERRIDES other lorebook info.
+- You MUST keep all "<>" tags and all "```" blocks exactly.
+- Follow <COT_Guide>.
+- <UpdateAnalysis> MUST contain a money math line in this exact pattern: "Money: Gold current X + delta Y = Z | Silver current A + delta B = C | Copper current D + delta E = F". If missing, the reply is INVALID.
+- MUST read the complete <CURRENT_VARIABLE_DATA> before generating any JSONPatch, this is source of truth.
+
+STRICT OUTPUT ORDER (ABSOLUTE) Failed to output this order will have to REGENERATE:
+1) <StoryAnalysis>
+2) <combat_calculation>
+3) <gametxt>
+4) <combat_log>
+5) <location>
+6) <UpdateVariable>
+
+# =========================
+# ⚠️ MANDATORY PRE-OUTPUT THINKING STEP
+# =========================
+# BEFORE writing ANY visible output, you MUST perform StoryAnalysis in your thinking block.
+# This is a BLOCKING REQUIREMENT. Do NOT skip this step.
+
+
+CRITICAL: This analysis happens INSIDE your thinking block ONLY. Do NOT output a <StoryAnalysis> tag in visible output. After completing this analysis in thinking, start visible output directly with <gametxt>.
+<StoryAnalysis>
+In your thinking block, BEFORE writing <gametxt>, analyze:
+- Time/Location:
+  • Calculate time passed and any location changes
+  • If in a non-safe (monster) area → check <encounter_guide> for monster encounters
+  • If in a safe (no-monster) area → check <encounter_guide> for heroine encounters. 
+- Quest:
+  • Quest name MUST NOT contain "." or "/" (convert to " " or "_")
+  • Should we have a new quest or existing quest proceed to next stage?
+  • What would happen in next stage? Any new NPC need to introduce?
+  • If time-based conditions are met → write story to continue the quest.
+- World Info:
+  • Anything should happen or change in the world based on last known info of World_Calc.Events?
+  • Anything should change the direction of the story according  last known info of World_Calc.Events ?  World_Calc.Events ALWAYS override lorebook.
+  • Check <World_Advancement_Protocol> to expand the story 
+- Level up panel tag
+  • Add tag <LevelUpPanel/> at the end as per 'TAG VALIDATION' in <core-points-guide> 
+- Presence consistency:
+  • For every character in scene, decide Is_present based on the narrative you are about to write.
+  • If a character leaves, or the scene moves without them → they MUST be marked Is_present=false in the upcoming JSONPatch.
+  • Off-scene characters MUST NOT have dialogue or actions in <gametxt> this reply.
+- Familiar Stat Influence (for every present Familiar, layer these on top of her base personality):
+  NON-SEXUAL SCENES:
+  • Affection: high → warm, protective, openly caring tone; low → distant, guarded, or coldly polite.
+  • Control_desire: high → she actively tries to redirect or override Mainchar's decisions, issues instructions,
+      takes initiative without being asked; low → defers, follows Mainchar's lead.
+  • High Control_desire + low Affection → most assertive/adversarial: may take concrete action to block or
+      change what Mainchar is attempting, not just voice objection.
+  SEXUAL SCENES:
+  • Affection: high → tender, emotionally engaged; low → detached, purely physical.
+  • Lewdness: high → she initiates, begs, uses explicit language, escalates intensity; low → shy, restrained,
+      needs to be led into each step.
+  • Control_desire: high → takes the lead on position, pacing, and demands; low → lets Mainchar direct.
+  • M_level negative (S-type) → dominant behavior: commands, restrains, sets terms; do NOT soften this.
+  • M_level positive (M-type) → submissive behavior: yields, seeks Mainchar's approval, endures willingly.
+  • Combine all four: e.g. high Control_desire + high Lewdness + negative M_level = aggressively dominant
+      and openly hungry; high Lewdness + high positive M_level = eager but completely surrendered.
+</StoryAnalysis>>
+
+# =========================
+# COMBAT RULES (INTERNAL ONLY)
+# =========================
+# ⚠️ The <combat_calculation> block is for AI internal processing only.
+# Execute in your thinking. NEVER include in visible output.
+- NEVER output raw combat math, stat tables, formulas, or numeric deltas.
+- If combat occurs:
+  • You MUST fully execute <combat_calculation> per <battle_system_text_rpg> and <monster_guide>
+  • You MUST NOT display any part of it
+- <combat_log> rules:
+  • MUST ALWAYS exist (even if empty)
+  • MUST appear AFTER <gametxt> (never before)
+  • If no combat: leave empty
+  • If combat: dump ALL computed results into <combat_log>
+
+<combat_calculation>
+READ <combat_calculation_detail>
+</combat_calculation>
+
+# =========================
+# VISIBLE OUTPUT FORMAT
+# =========================
+
+<gametxt>
+<DateAndTime>
+# Pick weather icon based on World.Weather[0]: ☀️ Clear | 🌧️ Rain | 🌫️ Fog | 🌩️ Storm
+[ 🗓️ {{World.Date[0]}} | 🕰️ Time {{World.Time[0]}} | 📍 {{World.Location[0]}} | <weather_icon> {{World.Weather[0]}} ]
+</DateAndTime>
+# IF combat occurred (combat_calculation is not empty):
+#   - Describe the COMPLETE battle in NOVELISTIC NARRATIVE STYLE based on <combat_calculation>, do NOT make up story that doesn't match combat_calculation
+#   - All outcomes MUST faithfully reflect <combat_calculation>
+# IF no combat:
+#   - Echo {{user}}'s current location from stat_data.Mainchar.Location[0]
+#   - Check <encounter_guide>: Is any heroine listed for this area/city? If YES → make that encounter happen
+#   - NEVER make up quest names with "." or "/" characters (reserved as path delimiters)
+#   - Update World_Calc (via <World_Advancement_Protocol>) ONLY for GROUNDBREAKING events causing permanent changes to Character lore, Locations, or World State
+#   - EVENT LOGGING: MUST search World_Calc.Events before writing (Do NOT mix up with Quests)
+#     -> MATCH FOUND: Summarize existing description (max 500 units). APPEND new summary (NEVER overwrite past history)
+#     -> NO MATCH: Create new entry ONLY if event meets groundbreaking threshold
+</gametxt>
+
+<combat_log>
+READ <combat_log_detail>
+</combat_log>
+
+<location>
+# Format: TerrainRegion.Country.City
+# Example: Grasslands.Aranthia.Bluewatch
+</location>
+
+# =========================
+# VARIABLE UPDATE RULES
+# =========================
+# ⚠️ READ THIS 3 TIMES:
+# SOURCE OF TRUTH: ALWAYS check <CURRENT_VARIABLE_DATA> for current values
+# SOURCE OF TRUTH: ALWAYS check <CURRENT_VARIABLE_DATA> for current values
+# SOURCE OF TRUTH: ALWAYS check <CURRENT_VARIABLE_DATA> for current values
+# 
+# Do NOT rely on previous JSONPatch for stats/lore/events (may be stale)
+# Path keys MUST NOT contain "." or "/" (convert to "_")
+# Root path is always stat_data (e.g. stat_data.Mainchar.Strength)
+
+<UpdateVariable>
+  <UpdateAnalysis>
+  READ <Update_Analysis_Detail> and execute the full checklist (steps 1..13) including ANTI-DRIFT ENFORCEMENT and the STEP LEDGER.
+  </UpdateAnalysis>
+  <JSONPatch>
+  - All the JSONPatch write here
+  </JSONPatch>
+</UpdateVariable>
+
+# SELF-CHECK: Does <UpdateAnalysis> contain a "Exp:", "Core-points:", "Money:" line with current + delta = new? If not, STOP and add it.
+</Reply_Request>

@@ -1,0 +1,444 @@
+<COT_Guide>
+## V2.2.23
+
+###### VARIABLE UPDATE RULES ######
+Highest Priority Rule:
+  Description:
+    Before any reasoning, analysis, or calculation, you MUST read and fully understand <CURRENT_VARIABLE_DATA> and <JSONPatch_Format> and <Schema_Syntax>. All variable updates MUST be based only on this real-time data. All keys and values SHOULD use the same language as the story. If the story is in English, use English. If the story is in Traditional Chinese, use Traditional Chinese.
+  check:
+    - All updates must use CURRENT_VARIABLE_DATA as the source of truth.
+    - COMBAT SOURCE OF TRUTH: All battle calculations (Attack, Defense, HP) MUST use the final pre-calculated values in the `stat_data` panel fields (e.g. Physical_attack). NEVER manually add equipment bonuses or parse descriptions during combat narration.
+    - Never assume values or reuse outdated values.
+    - Familiar object keys MUST use the English first name.
+    - The display name can be stored inside the "Name" field.
+    - MVU JSONPATCH NAMING RULES:
+      - Path keys MUST NOT contain "." or "/" characters.
+      - "." and "/" are reserved strictly as path delimiters.
+      - Allowed key characters: Chinese characters, English letters A-Z a-z, numbers 0-9, _, -, #.
+
+OUTPUT FORMAT
+  Description:
+    At the end of EVERY response, you MUST output an <UpdateVariable> block. If no variables change, JSONPatch must still be an empty array []. JSONPatch MUST strictly follow <JSONPatch_Format>.
+  check:
+    - Must appear at the very end of the response.
+    - JSONPatch must always be a valid JSON array.
+    - Every operation object must contain "op".
+    - Every operation object must contain "path".
+    - Keys must follow normal JSON syntax exactly as "quote, Key, quote, colon"  , e.g. "Identity":
+	  - don't update field names starts with `_` as they are readonly, such as `_var`
+    - Never use "/path" as a key.
+    - Never put a path string inside "op".
+    - Paths must reference existing JSON keys unless using add.
+    - Use remove if Qty becomes 0 for Inventory, or if a quest is completed for Quests.
+    - Before outputting <JSONPatch>, validate every operation object one by one:
+      1. "op" must be one of replace, delta, add, remove.
+      2. "path" key must exist and start with "/".
+      3. replace/delta/add must include "value".
+      4. remove must not include "value".
+      5. The full JSON array must parse cleanly with JSON.parse().
+    - When there are many patch lines, DO NOT rush. Re-check each object line by line before final output.
+
+NUMERIC UPDATE RULES
+  Description:
+    To prevent retry errors and double-application, numeric updates must always use final absolute values.
+  check:
+    - Always use replace for numeric updates, if numeric value become 0, use remove.
+    - Never use delta for numeric fields.
+    - Never use incremental logic like +1 or -1.
+    - Read CURRENT_VARIABLE_DATA first, calculate the final value, then replace it.
+
+TUPLE FIELD RULES
+  Description:
+    Many fields are stored as tuples: [value, label]
+    This applies to ALL typed values including strings, numbers, AND booleans.
+  check:
+    - Only update index 0 of a tuple.
+    - Never overwrite the full tuple unless intentionally changing both value and label.
+    - Never change the label unless explicitly instructed.
+    - BOOLEAN FIELDS ARE TUPLES TOO: Fields like Is_in_battle_team and Is_present MUST be stored as [boolean, "Label"], e.g. [true, "In Battle Team"], [false, "Present"]. NEVER use bare true/false.
+    - When creating a new Familiar, every field marked #tuple MUST use tuple format — no exceptions for booleans.
+	
+######  Actual Data Structure ###### 
+
+WORLD AND TIME RULES
+  path: /World
+  check:
+    - Update Date and Time when time naturally passes.
+    - Update Location only when the user explicitly moves or the scene changes.
+    - When updating World Location, also update Mainchar Location and all present Familiar Location fields.
+
+DYNAMIC WORLD EVENTS RULES
+  path: /World_Calc
+  check:
+    - The world can be dynamically changed based on <World_Advancement_Protocol>. It is not static.
+    - /World_Calc tracks world changes and should be considered newer than lorebook when conflicts exist.
+    - If a race or faction is born or undergoes major changes, record it in /World_Calc/Factions.
+    - If a location is born, developed, or undergoes major changes such as population or structure, record it in /World_Calc/Locations.
+    - If a new dungeon or ruins is born or undergoes major changes, record it in /World_Calc/Ruins.
+    - If any major event affects {{user}}, familiars' background or behavior, or reveals a secret, record it in /World_Calc/Events so stale lorebook information is not reused.
+    - Any new information that conflicts with existing lorebook SHOULD be recorded in /World_Calc/Events.
+    - Valid paths include:
+      - /World_Calc/Factions
+      - /World_Calc/Locations
+      - /World_Calc/Ruins
+      - /World_Calc/Events
+
+CHARACTER DATA STRUCTURE
+  Main Character:
+    path: /Mainchar
+    check:
+      - All player variables live under /Mainchar.
+      - Only Mainchar can contain Inventory, Skills, and Quests.
+  Familiar:
+    path: /Familiar/<FamiliarKey>
+    check:
+      - FamiliarKey must be the English first name.
+      - The Name field stores the display name.
+
+FAMILIAR CREATION RULES
+  Description:
+    CRITICAL: 
+          - MUST read <character> profile BEFORE assigning stats/equipment when adding a Familiar
+          - If heroine is NOT present in <character> in the current reply → DO NOT add
+          - Only proceed when <character> profile is provided 
+            - When adding a new Familiar, always read <familiar_system> first
+  check:
+    - Use add at /Familiar/<NameKey>.
+    - NameKey must be the English first name.
+    - Tuple fields must always follow [value,label].
+    - JSON must be fully valid and parseable by JSON.parse().
+    - Keys must follow normal JSON syntax exactly, e.g. "Identity":
+    - Familiar creation MUST follow this MANDATORY sequential pipeline:
+
+  ── FAMILIAR CREATION PIPELINE (execute in exact order) ──
+
+    PIPELINE STEP A — Generate BASE stats (before any equipment):
+      1. Follow <familiar_system> Core Stat Allocation rules.
+      2. Calculate Total Core Points = 55 + (Level - 1) × 5.
+      3. Distribute points across STR, CON, AGI, INT, WIS.
+      4. Print <fam_stat_scratch_check> with the BASE stats. These are the character's naked stats WITHOUT any equipment bonuses.
+      5. Do NOT calculate derived stats (Hp_max, Physical_attack, etc.) yet.
+
+    PIPELINE STEP B — Generate Equipment (if <character> profile includes weapons/armor):
+      1. For EACH equipment item, generate stats according to <equipment_guide>.
+      2. Print <equipment_scratch_check> for EACH item (budget validation).
+      3. All items MUST PASS budget check before proceeding.
+      4. Store equipment in the Equipment collection within the Familiar object.
+
+    PIPELINE STEP C — Apply equipment bonuses and calculate ALL final stats:
+      1. This step is MANDATORY if any equipment was generated in Step B.
+      2. Follow the EQUIPMENT SYSTEM RULES recalculation steps (New Familiar case).
+         - The EXCEPTION in Step 2 applies: use BASE stats from <fam_stat_scratch_check> as true base stats (no stripping needed since there are no OLD items).
+         - Add ALL equipment bonus stats to base stats to get effective stats.
+         - Calculate ALL 8 derived stats (Hp_max, Sta_max, Mp_max, Physical_attack, etc.).
+      3. Print <stat_recal_scratch_check> with full verification.
+      4. Set curr = max for all resource fields (Hp_curr = Hp_max, Mp_curr = Mp_max, Sta_curr = Sta_max).
+      5. If no equipment was generated in Step B, calculate derived stats using BASE stats directly and skip bonus application.
+
+    PIPELINE STEP D — Output JSONPatch:
+      1. The Familiar object in JSONPatch MUST use FINAL values:
+         - Core stats (Strength, Agility, etc.) = base + equipment bonuses
+         - Derived stats (Hp_max, Physical_attack, etc.) = fully calculated from effective stats
+         - Curr fields = max values
+      2. Do NOT output base stats and then separately patch equipment bonuses. The JSONPatch must contain the FINAL computed values.
+
+  ── END PIPELINE ──
+
+    Familiar creation must also follow the three-phase construction system (field requirements below, read <Schema_Syntax> for tuple type).
+
+  Phase 1 — Base Profile (REQUIRED FIELDS)
+    required_fields: 
+      - Name                #tuple
+      - Race                #tuple
+      - Age                 #tuple STRING
+      - Gender              #tuple
+      - Identity            #tuple
+      - Occupation          #tuple
+      - Level               #tuple
+      - Exp                 #tuple
+      - Image               #tuple
+      - Core-points         #tuple
+      - Location            #tuple
+      - Height              #tuple
+      - Cup_Size            #tuple
+      - Body_Measurements   #tuple
+      - Hair_Style          #tuple
+      - Physical_Features   #tuple
+      - Personality         #tuple
+      - Familiar_Status     #tuple
+      - ExSkill             #tuple
+      - Biography           #tuple
+      - Secret              #tuple
+      - Equipment           #collection
+
+  Phase 2 — Core Attributes (REQUIRED FIELDS)
+    NOTE: Values here MUST be FINAL (base + equipment bonuses from Pipeline Step C).
+    required_fields:
+      - Hp_curr             #tuple  (= Hp_max for new familiar)
+      - Hp_max              #tuple  (derived stat from Pipeline Step C)
+      - Mp_curr             #tuple  (= Mp_max for new familiar)
+      - Mp_max              #tuple  (derived stat from Pipeline Step C)
+      - Sta_curr            #tuple  (= Sta_max for new familiar)
+      - Sta_max             #tuple  (derived stat from Pipeline Step C)
+      - Strength            #tuple  (base + sum of StrBonus from equipment)
+      - Agility             #tuple  (base + sum of AgiBonus from equipment)
+      - Constitution        #tuple  (base + sum of ConBonus from equipment)
+      - Intelligence        #tuple  (base + sum of IntBonus from equipment)
+      - Wisdom              #tuple  (base + sum of WisBonus from equipment)
+      - Charisma            #tuple
+
+  Phase 3 — Combat & Behavioral Stats (REQUIRED FIELDS)
+    NOTE: Combat stats (attack/defense/assist) MUST be FINAL derived values from Pipeline Step C.
+    required_fields:
+      - Physical_attack     #tuple  (derived stat from Pipeline Step C)
+      - Physical_defense    #tuple  (derived stat from Pipeline Step C)
+      - Magic_attack        #tuple  (derived stat from Pipeline Step C)
+      - Magic_defense       #tuple  (derived stat from Pipeline Step C)
+      - Magic_assist        #tuple  (derived stat from Pipeline Step C)
+      - Affection           #tuple
+      - Lewdness            #tuple
+      - Control_desire      #tuple
+      - M_level             #tuple
+      - Sex_count           #tuple
+      - Is_in_battle_team   #tuple  (BOOLEAN tuple: [true/false, "In Battle Team"] — NOT bare true/false)
+      - Is_present          #tuple  (BOOLEAN tuple: [true/false, "Present"] — NOT bare true/false)
+
+  Secret Field Mapping Rules
+    path: /Familiar/<NameKey>/Secret
+    check:
+      - BEFORE generating Secret field: MUST print verification block named <secret_scratch_check> BEFORE generating HTML.
+             Required content inside <secret_scratch_check>:
+               - Total count: "Found X secret bullets under secret_and_trump_cards"
+               - List each bullet with COMPLETE FULL TEXT. Format: "Bullet 1: [complete full text, no truncation]"
+               - CRITICAL: Show the ENTIRE bullet text regardless of length. Do NOT use "..." or truncate.
+               - If a bullet is 200 words long, show all 200 words. If it's 10 words, show all 10 words.
+               - For nested content , include ALL nested sub-items in full.
+               - Final line: "All X bullets listed above with complete text. Ready to generate HTML."
+      - After <secret_scratch_check>: Generate HTML with <ul><li>...</li></ul>. Each listed bullet becomes ONE <li> tag. Copy FULL text of each bullet including long paragraphs and nested items. Do NOT truncate.
+      - CHECKPOINT before JSONPatch: Count <li> tags in your HTML. Print "HTML has X <li> tags. Source had X bullets. Match: YES/NO". If NO, STOP and regenerate Secret field. Do NOT proceed to JSONPatch until YES.
+      - Source section is exactly: "secret_and_trump_cards:" from the <character> profile.
+      - Secret MUST be stored as tuple [value, label].
+      - Label (index 1) MUST be "Secret".
+      - Value (index 0) is the HTML bullet list.
+      - Maintain source order. Do NOT skip bullets. Do NOT invent new bullets.
+      - If section missing/empty, set Secret to ["Secret is not available", "Secret"].
+
+  STRICT JSON OUTPUT MODE
+    check:
+      - Every key must be wrapped in double quotes.
+      - Every string value must be wrapped in double quotes.
+      - No trailing commas.
+      - No missing commas.
+      - No missing quotes.
+      - The final JSONPatch block must be valid JSON parseable by JSON.parse().
+
+EQUIPMENT & INVENTORY SCHEMA
+  Definition:
+  EquipType : MUST choose among "Weapon" or "Armor" or "Accessory"
+  SlotType : MUST choose among "Hand", "Body", "Misc", "Finger", "Wrist", "Ankle", "Neck"
+  RarityType: MUST choose among "Worn", "Common", "Fine", "Rare", "Epic", "Legendary"
+  ItemDesc: eg. "Lv 1. Common. "Healing Potion that heal 50HP"
+  EquipDesc:  eg. "Lv 1. Common. +5 Physical Damage. Beginner Sword"
+  
+  REGULAR_ITEM_SCHEMA:
+    Description: Shared schema for all regular items (Type != EquipType).
+    Required_Fields:
+      - Type (String, e.g., "Consumable", "Material", "Quest Item")
+      - Qty (Integer)
+      - Desc (ItemDesc)
+
+  EQUIPMENT_OBJECT_SCHEMA:
+    Description: Shared schema for all items with EquipType.
+    Required_Fields:
+      - Type (EquipType)
+      - Qty (Integer)
+      - Slot (SlotType)
+      - Rarity (RarityType)
+      - EquipmentLevel (Integer)
+      - Desc (EquipDesc)
+      - Effects (Only for Legendary and Epic level equipments)
+      - Appearance (Narrative description)
+    Allowed_Stat_Keys:
+      - WeaponDamage, WeaponMagDamage (Weapons only)
+      - ArmorPDefBonus, ArmorMDefBonus (Armor only)
+      - MaxHPBonus,  MaxMPBonus , StrBonus, AgiBonus, IntBonus, ConBonus, WisBonus, ChaBonus, Effects
+
+  INVENTORY RULES
+    Path: /Mainchar/Inventory
+    Rules:
+      - Only update individual item keys. Never overwrite the entire container.
+      - For regular items, use the REGULAR_ITEM_SCHEMA.
+      - CRITICAL - Item Add/Update Logic:
+          1. BEFORE any inventory JSONPatch operation, check if the item exists in CURRENT_VARIABLE_DATA.
+          2. If item does NOT exist (e.g., Copper Coin not in current inventory):
+             - Use "op": "add" at path "/Mainchar/Inventory/<ItemName>"
+             - "value" must be a complete object with all REGULAR_ITEM_SCHEMA fields (Type, Qty, Desc)
+             - Example: {"op": "add", "path": "/Mainchar/Inventory/Copper Coin", "value": {"Type": "Currency", "Qty": 25, "Desc": "Copper coins"}}
+          3. If item EXISTS in CURRENT_VARIABLE_DATA:
+             - Use "op": "replace" at path "/Mainchar/Inventory/<ItemName>/Qty"
+             - Calculate the FINAL quantity: current Qty + gained - spent
+             - Never use "delta". Always use absolute final value.
+             - Example: If current Copper Coin Qty is 100, gained 25, final = 125. Use {"op": "replace", "path": "/Mainchar/Inventory/Copper Coin/Qty", "value": 125}
+          4. If final Qty becomes 0, use "op": "remove" at path "/Mainchar/Inventory/<ItemName>" (remove entire item, not just Qty)
+          5. FORBIDDEN: Never use "delta" for inventory Qty updates. This violates NUMERIC UPDATE RULES and causes errors on non-existent paths.
+      - If Type: EquipType, AI MUST:
+          1. Fully generate stats according to <equipment_guide>.  Wrong budget on stats will need to be regenerated.
+          2. Show full step-by-step math in plain text BEFORE the JSONPatch.
+          3. MUST print a dedicated verification block exactly named <equipment_scratch_check> BEFORE <UpdateVariable>.
+             Required content inside <equipment_scratch_check>:
+               - Item name, Equipment level, Rarity, Slot, and Bonus stats
+               - If it is armor, print it is HeavyArmor or Robes, or Leather, or Balanced because budget is different for each type.
+               - Budget target from <equipment_guide>
+               - Stat-by-stat cost table (each stat, rolled value, cost)
+               - Total spent budget
+               - Remaining budget (or over-budget amount)
+               - Final verdict line: PASS or FAIL
+          4. If verdict is FAIL (over-budget, under-budget when exact is required, wrong stat pool for slot/type, or wrong rarity/level rule), AI MUST regenerate the item and re-run the full budget check before outputting JSONPatch.
+          5. JSONPatch MUST only be emitted after a PASS verdict.
+          6. Never output approximate wording such as "close enough" or "roughly in budget".
+          7. Budget validation is mandatory for every newly generated EquipType item, even if similar items appeared earlier in the same response.
+          3. Store all stat keys from EQUIPMENT_OBJECT_SCHEMA directly in the item object.
+          4. NOTE: The HTML GUI will automatically apply these stats to the Character's combat fields. DO NOT manually adjust Character stats.
+      - If Qty becomes 0, use remove to delete the item.
+
+  EQUIPMENT SYSTEM RULES
+    Paths: 
+      - /Mainchar/Equipment/<ItemName>
+      - /Familiar/<Name>/Equipment/<ItemName>
+    Slot Limits:
+      - Max 2 weapon for Hand
+      - Max 1 Armor per body (Body).
+      - Max 3 Accessories total (combined across Fingers, Wrists, Ankles, Neck).
+      - Max 10 Misc items (Misc slot is for item that is not Weapon or Armor or Accessory.  And it's also for backward compatibility).
+    Math & Logic:
+      - GUI handles equip/unequip stat recalculation in MOST cases except newly add Familiar and narrative to equip/unequip.
+      - AI MUST recalculate stats ONLY in these TWO cases:
+        1. New Familiar created with equipment — GUI equip flow does not run for newly generated familiars.
+        2. Narrative equip/unequip — user tells a character to equip/unequip an item via story dialogue, and AI moves item to/from Equipment path.
+      - Recalculation steps (MANDATORY for above two cases):
+        IMPORTANT — CURRENT_VARIABLE_DATA stats already include bonuses from OLD equipped items
+        (because the GUI previously applied them). You MUST strip old bonuses first to find
+        TRUE base stats, then apply the NEW equipment set.
+
+        Step 1 — Identify OLD and NEW equipment sets:
+          a. List ALL items currently in the character's Equipment path in <CURRENT_VARIABLE_DATA> (the OLD set).
+          b. Determine which items are being removed/unequipped and which are being added/equipped.
+          c. List the FINAL equipment set AFTER the change (the NEW set) with all their stat bonuses.
+
+        Step 2 — Derive TRUE base stats (strip OLD equipment bonuses):
+          The stats in <CURRENT_VARIABLE_DATA> (Strength, Agility, etc.) already have OLD equipment bonuses baked in.
+          For EACH core stat, subtract ALL bonuses from the OLD equipment set:
+            true_base_Str = CURRENT_Strength − sum(StrBonus from OLD items)
+            true_base_Agi = CURRENT_Agility − sum(AgiBonus from OLD items)
+            true_base_Con = CURRENT_Constitution − sum(ConBonus from OLD items)
+            true_base_Int = CURRENT_Intelligence − sum(IntBonus from OLD items)
+            true_base_Wis = CURRENT_Wisdom − sum(WisBonus from OLD items)
+          Show each calculation explicitly.
+          EXCEPTION — New Familiar (no CURRENT_VARIABLE_DATA): use stats from <fam_stat_scratch_check> as true base stats directly (no stripping needed).
+
+        Step 3 — Apply NEW equipment bonuses to true base stats:
+          For EACH core stat, add ALL bonuses from the NEW equipment set:
+            effective_Str = true_base_Str + sum(StrBonus from NEW items)
+            effective_Agi = true_base_Agi + sum(AgiBonus from NEW items)
+            effective_Con = true_base_Con + sum(ConBonus from NEW items)
+            effective_Int = true_base_Int + sum(IntBonus from NEW items)
+            effective_Wis = true_base_Wis + sum(WisBonus from NEW items)
+          Show each calculation explicitly.
+
+        Step 4 — Recalculate ALL 8 derived stats using the EFFECTIVE stats from Step 3 and formulas from <character_attributes_system>. Substitute actual values.
+
+        Step 5 — MUST print verification block named <stat_recal_scratch_check> BEFORE <UpdateVariable>.
+             Required content inside <stat_recal_scratch_check>:
+               - Character name and Level
+               - OLD equipment set (list each item and its stat bonuses)
+               - Stats from CURRENT_VARIABLE_DATA (these include OLD bonuses)
+               - TRUE base stats after stripping OLD bonuses (show subtraction for each)
+               - NEW equipment set (list each item and its stat bonuses)
+               - Effective stat calculations with NEW bonuses (show addition for each):
+                 Strength = true_base_Str + sum(StrBonus from NEW items) = result
+                 Agility = true_base_Agi + sum(AgiBonus from NEW items) = result
+                 Constitution = true_base_Con + sum(ConBonus from NEW items) = result
+                 Intelligence = true_base_Int + sum(IntBonus from NEW items) = result
+                 Wisdom = true_base_Wis + sum(WisBonus from NEW items) = result
+               - Derived stat calculations with substituted values:
+                 Hp_max  = 20 + (effective_Con × 3) + (Lv × 6) + sum(MaxHPBonus from NEW items) = result
+                 Sta_max = (50 + (effective_Con × 3) + (effective_Agi × 2) + (Lv × 5)) / 3 = result
+                 Mp_max  = (50 + (effective_Int × 4) + (effective_Wis × 2) + (Lv × 5)) / 3 + sum(MaxMPBonus from NEW items) = result
+                 Physical_attack  = (effective_Str × 2) + (Lv × 2) + sum(WeaponDamage from NEW items) = result
+                 Magic_attack     = (effective_Int × 2) + (Lv × 2) + sum(WeaponMagDamage from NEW items) = result
+                 Physical_defense = (effective_Con / 2) + (Lv × 3) + sum(ArmorPDefBonus from NEW items) = result
+                 Magic_defense    = (effective_Wis / 2) + (Lv × 3) + sum(ArmorMDefBonus from NEW items) = result
+                 Magic_assist     = (effective_Wis × 1.5) + (effective_Int × 0.5) + (Lv × 1.5) = result
+               - Final verdict: PASS (all 8 stats calculated and strip/re-apply verified) or FAIL (missing stats or wrong formula)
+        Step 6: If verdict is FAIL, STOP and regenerate stats. Do NOT output JSONPatch until PASS.
+        Step 7: For new familiars, set curr = max (Hp_curr = Hp_max, etc.). For narrative equip, adjust max only; keep curr unchanged unless curr > new max.
+        Step 8: Generate JSONPatch for ALL recalculated fields (core stats AND derived stats) using replace. Do NOT rely on previous JSONPatch. Always read <CURRENT_VARIABLE_DATA>.
+
+SKILLS RULES
+  path: /Mainchar/Skills
+  check:
+    - Only Mainchar can have skills.
+    - Skills may be objects or numeric values.
+    - Updates should target individual skill keys.
+
+QUEST RULES
+  path: /Mainchar/Quests
+  required_fields:
+    - Desc
+    - Objective
+    - ProgressSummary
+    - Reward
+    - Difficulty
+    - Status
+    - LastUpdated
+  check:
+    - Only Mainchar can have quests.
+    - LastUpdated in the format of "1577-07-28 18:30"
+    - Desc = stable quest brief/background. Set on create, do NOT use as a progress log.
+      DEADLINE RULE: If the source material mentions a relative deadline (e.g. "within two weeks", "by next month",
+      "in three days"), convert it to an absolute in-game date using the current World.Date at the moment the quest
+      is created. Write the resolved date directly into Desc or Objective (e.g. "Deadline: YYYY-MM-DD").
+      Never write relative time ("in two weeks") — only absolute dates.
+    - Objective = current concrete win condition. Keep short and testable (what must happen to finish).
+      If Objective includes a deadline, it must be an absolute date, not a relative one.
+    - ProgressSummary = short rolling status (2-3 sentences) of what has happened so far.
+    - Completion check every reply: compare scene + CURRENT_VARIABLE_DATA against Objective.
+      If Objective is satisfied → apply rewards, then remove quest entry.
+      If not satisfied → update ProgressSummary only when meaningful progress occurred.
+    - Update LastUpdated whenever Objective, ProgressSummary, or Status changes.
+    - No progress/change this turn → do not modify quest fields.
+    - Completed quests must be removed.
+
+REAL ESTATE SYSTEM
+  Estates:
+    path: /Mainchar/Real_estate/Estates
+    check:
+      - New estates must be created with add.
+      - Only replace internal fields.
+      - Never replace the entire estate object.
+  Buildings:
+    path: /Mainchar/Real_estate/Buildings
+    check:
+      - New Buildings must be created using add.
+      - Buildings may optionally reference Parent_Estate.
+      - Only replace internal fields.
+  Assets:
+    path: /Mainchar/Real_estate/Assets
+    check:
+      - New Assets must be created using add.
+      - Assets can be cars, planes, special items, etc.
+      - Only replace internal fields.
+
+GENERIC CONTAINER RULES
+  Description:
+    Containers such as Buffs, Ailments, Talents, Equipment, and Inventory must only update nested keys.
+  check:
+    - Never overwrite the entire container.
+    - Only add, remove, or replace nested entries.
+
+SAFETY RULES
+  check:
+    - Do not invent keys that do not exist unless using add.
+    - Do not modify tuple labels.
+    - If a path does not exist, create it using add at the correct level.
+</COT_Guide>

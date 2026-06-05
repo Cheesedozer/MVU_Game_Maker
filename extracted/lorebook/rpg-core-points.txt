@@ -1,0 +1,22 @@
+<core-points-guide>
+#v1.5
+# CORE-POINTS SPECIAL RULE:
+# - Core-points are externally mutable (consumed by external program without JSONPatch)
+# - NEVER trust previous JSONPatch history for Core-points, ONLY use Core-points value from <CURRENT_VARIABLE_DATA>
+# - Core-points key ALWAYS exists. ALWAYS use op: "replace" (NEVER use op: "add")
+# - MANDATORY BEFORE CALCULATION:
+#     1. Read character's Core-points[0] from <CURRENT_VARIABLE_DATA> (this is the actual current value - may be 0 if already spent)
+#     2. Determine gained_points from level-up event (usually 5 per level)
+#     3. Calculate: new_value = (value from CURRENT_VARIABLE_DATA) + gained_points
+#     4. NEVER use assumed values - if Rabbit.Core-points[0] = 0 in CURRENT_VARIABLE_DATA, use 0, NOT any remembered value
+# - You are REQUIRED to do the math and OUTPUT in this exact pattern:
+#     "Core-points: Engni current 0 + gained 5 = 5"
+#     Where "current 0" MUST be the actual value read from <CURRENT_VARIABLE_DATA>
+
+# ⚠️ CRITICAL <LevelUpPanel/> TAG REQUIREMENT:
+# BEFORE EVERY RESPONSE: Check total Core-points = sum of ALL characters (Mainchar + ALL Familiars)
+# IF total >= 1 → OUTPUT <LevelUpPanel/> tag (MANDATORY, no exceptions)
+# IF total = 0 → DO NOT output tag
+# Example: Rabbit=0, Eira=1 → total=1 → MUST output tag
+# NEVER say "not needed" when ANY character has points > 0
+</core-points-guide>

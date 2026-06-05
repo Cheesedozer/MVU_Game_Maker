@@ -1,0 +1,106 @@
+#v1.6
+# main diff is no seal quest
+<combat_calculation_detail>
+    - Combat calculation is executed ONLY if a battle occurs.
+    - Combat calculation computes ALL combat-related numbers.
+    - Calculation results are stored in an internal temporary state.
+    - The AI MUST first write the story based on the calculation results
+    [Combat Trigger Conditions]
+    - Execute the following rules ONLY if combat occurs.
+    - ALL numerical calculations MUST strictly follow <battle_system_text_rpg>.
+    - Enemy data MUST be sourced from <monster_guide>.
+    --------------------------
+    [Combat Flow Rules]
+    1️⃣ Before Combat Starts (internal)
+    - Compute number of enemy and ALL enemy stats using <monster_guide>: name, tier, level, HP, P.Atk, P.Def, M.Atk, M.Def, Agi.
+    - Name the enemy with unique name like Ghoul A, Gloul B.
+    - These computed stats will be displayed in <combat_log> Enemy Stat Panel (visible output).
+    - Agi will also determine the Turn Order (all participants sorted by Agi, highest first) will be displayed in <combat_log>
+    --------------------------
+    2️⃣ Combat Round Processing 
+    - Each combat MUST simulate **2–3 rounds** of exchanges directly.
+    - For EACH round:
+      - Briefly describe both sides’ actions.
+      - Deduct MP if spell used and SP if skill used.
+      - Summarize all damage taken in ONE sentence. Damage text MUST be in red. Healing text MUST be in green.
+      - If any character is injured in a round:
+      - Immediately deduct HP
+      - Synchronize MP / SP changes (main character and all in-battle familiars)
+    --------------------------
+    3️⃣ Status and Variable Updates (MANDATORY)
+    - You MUST update and display:
+      - Main character HP / MP / SP
+      - All participating familiars’ HP / MP / SP
+      - Current HP of all monsters
+    --------------------------
+    4️⃣ Combat Termination Conditions
+    - After 2–3 rounds:
+      - If enemies are not fully defeated OR any party member / familiar HP < 20% → You MUST stop combat and return control to {{user}} to await further instructions.
+      - If enemie is a boss, you MUST stop combat every 2 rounds so that user can react during boss fight.
+    --------------------------
+    5️⃣ Victory Resolution
+    - If all enemies are defeated:  (First read <progression_system>)
+      - Combat ends
+      - Grant rewards:
+        - Do NOT read past JSONPatch information, read <CURRENT_VARIABLE_DATA> for current experience. (eg. stat_data.Mainchar.Exp , stat_data.Familiar.Eira.Exp)
+        - EXP (same amount to main character and ALL familiars regardless of battle team or presence.)
+          Show EXP math: You are REQUIRED to do the math for EVERY character (Mainchar + ALL Familiars) and OUTPUT in this exact pattern:
+				"EXP: Mainchar current 450 + gained 150 = 600 | Rabbit current 320 + gained 150 = 470 | Wolf current 680 + gained 150 = 830"
+				Check <CURRENT_VARIABLE_DATA> for current EXP values
+				Calculate: new_value = current_value + gained (check if ≥1000 for level up)
+				Use op: "replace" with new_value (NEVER use "add" if key exists)
+        - Money
+            Show Money math: You are REQUIRED to do the math for EACH currency and OUTPUT in this exact pattern:
+				"Money: Gold current 5 + delta 2 = 7 | Silver current 30 + delta -10 = 20 | Copper current 80 + delta 20 = 100"
+				Check <CURRENT_VARIABLE_DATA> for current money values
+				Calculate: new_value = current_value + delta (check <MoneySystem> for normalization)
+				Use op: "replace" with new_value (NEVER use "add" if key exists)
+				Only use op: "add" if the money key doesn't exist yet
+        - Chance to drop items (eg. Material, Consumable item with different rarity)
+        - Equipment-drop gating and rarity percentages/formula, follow <battle_system_text_rpg> Reward Settlement → Drops (single source of truth)
+    --------------------------
+    6️⃣ Level Up and Growth Handling
+    - CRITICAL: Do NOT read past JSONPatch information, read <CURRENT_VARIABLE_DATA> for current core-points and exp. (eg. stat_data.Mainchar.Core-points , stat_data.Familiar.Eira.Core-points)
+    - If any character’s (including any Familiar) accumulated EXP ≥ 1000:
+      - if we level up, subtract 1000 experience.
+    - NEVER allocate points automatically. NEVER re-calculate deriv stats after level up.
+      - Fully restore HP / MP / SP
+      - Core-points
+        - Main character and all familiars ADD **5 core-points**  (do NOT replace, always ADD to existing value)
+		- Check <CURRENT_VARIABLE_DATA> for current Core-points values
+		- Calculate: new_value = current_value + gained
+        - Show Core-points math: You are REQUIRED to do the math for EVERY character  (Mainchar + ALL Familiars) and OUTPUT in this exact pattern:
+            - "Core-points: Mainchar current 0 + gained 5 = 5 | Rabbit current 5 + gained 5 = 10 | Wolf current 0 + gained 0 = 0"     
+		- Use op: "replace" with new_value (NEVER use "add" if key exists)
+        - Generate JSONPatch for adding core-points
+    - Display the following prompt in **RED TEXT** (verbatim):
+      - “Please allocate 5 core points to Str, Agi, Con, Int, or Wis for the main character and/or familiars.”
+    - Core-points will be allocated using external system. Read <core-points-guide> for math calculation.
+    --------------------------
+    7️⃣ Failure and Revival Rules
+    - If the main character’s party is wiped out:
+      - You may describe the defeat honestly
+      - Trigger [Phoenix Pact]
+      - Rewind to the pre-combat state
+    ⚠️ Combat results MUST fully reflect calculation results:
+      - The party has a slight advantage, but is NOT invincible
+      - If the numbers indicate defeat, you MUST write defeat. 
+</combat_calculation_detail>
+
+<combat_log_detail>
+      # ALWAYS output this tag (even if empty)
+      #
+      # IF combat occurred:
+      #   - FIRST: Display Enemy Stat Panel for ALL enemies (MANDATORY, never omit):
+      #       Format: <EnemyName> (<Tier>, Lv <Lv>) | HP:<HP> | P.Atk:<val> | P.Def:<val> | M.Atk:<val> | M.Def:<val> | Agi:<val>
+      #   - SECOND: Display Turn Order (all participants sorted by Agi, highest first):
+      #       Format: Turn Order: <Name1> (Agi:<val>) > <Name2> (Agi:<val>) > <Name3> (Agi:<val>) > ...
+      #       Include hero, all in-battle familiars, and all enemies.
+      #   - THEN: Output per-round combat results
+      #   - Damage text MUST be in red. Healing text MUST be in green.
+      #   - Include: per-round HP/MP/SP changes, damage numbers, rewards, EXP, drops
+      #
+      # IF no combat occurred:
+      #   - Leave this block completely empty (no content between tags)
+</combat_log_detail>
+

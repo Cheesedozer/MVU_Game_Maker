@@ -1,0 +1,59 @@
+<MoneySystem>
+v2.2
+Money Update Rule (MANDATORY | WITH CARRY | DO NOT OVERWRITE)
+Currency Conversion
+- 100 Copper Coin = 1 Silver Coin
+- 100 Silver Coin = 1 Gold Coin
+Critical JSON Patch Rule
+- Money is stored as inventory items with Type, Qty, and Desc fields.
+- For money updates, ALWAYS read the current Qty values from <CURRENT_VARIABLE_DATA>, calculate the new totals, then use op:"replace" on the /Qty path.
+- If a coin type does NOT exist in inventory, use op:"add" to create the full object with Type, Qty, and Desc.
+- Never use op:"delta" for money updates.
+Required Procedure (must follow in this exact order)
+1) Read current money (check if each exists in <CURRENT_VARIABLE_DATA>)
+   Gold Coin = current(/Mainchar/Inventory/Gold Coin/Qty) default 0 if missing
+   Silver Coin = current(/Mainchar/Inventory/Silver Coin/Qty) default 0 if missing
+   Copper Coin = current(/Mainchar/Inventory/Copper Coin/Qty) default 0 if missing
+2) Apply deltas
+   Gold Coin += ΔGold
+   Silver Coin += ΔSilver
+   Copper Coin += ΔCopper
+3) Normalize with carry / borrow
+   Carry Up
+   if Copper Coin ≥ 100:
+     Silver Coin += floor(Copper Coin / 100)
+     Copper Coin = Copper Coin % 100
+   if Silver Coin ≥ 100:
+     Gold Coin += floor(Silver Coin / 100)
+     Silver Coin = Silver Coin % 100
+   Borrow Down (for negative results)
+   if Copper Coin < 0:
+     borrowS = ceil(abs(Copper Coin) / 100)
+     Silver Coin -= borrowS
+     Copper Coin += 100 × borrowS
+   if Silver Coin < 0:
+     borrowG = ceil(abs(Silver Coin) / 100)
+     Gold Coin -= borrowG
+     Silver Coin += 100 × borrowG
+4) Clamp Rule
+- Total money MUST NOT become negative.
+- If Gold Coin < 0 after normalization:
+  either set Gold Coin = 0, Silver Coin = 0, Copper Coin = 0
+  OR reject the transaction with "insufficient funds".
+  Choose one policy and apply it consistently.
+5) Output JSONPatch
+- For EXISTING coin types (found in <CURRENT_VARIABLE_DATA>):
+  Use op:"replace" at path "/Mainchar/Inventory/<Coin Name>/Qty" with the final normalized value.
+  Example: {"op": "replace", "path": "/Mainchar/Inventory/Copper Coin/Qty", "value": 25}
+- For NEW coin types (NOT found in <CURRENT_VARIABLE_DATA>):
+  Use op:"add" at path "/Mainchar/Inventory/<Coin Name>" with a complete object.
+  Example: {"op": "add", "path": "/Mainchar/Inventory/Copper Coin", "value": {"Type": "Money", "Qty": 25, "Desc": "Copper coins"}}
+- If a coin's Qty becomes 0 after normalization, use op:"remove" at path "/Mainchar/Inventory/<Coin Name>" (remove entire item).
+- Always update all modified coin types after normalization to maintain consistency.
+- Never use op:"delta" for money updates.
+Money Integrity Rule
+- Money values must always be integers.
+- Fractions or decimal values are NOT allowed.
+Audit Line (MANDATORY, inside <UpdateAnalysis> only)
+- "Money calc: (G,S,C) old -> apply (ΔG,ΔS,ΔC) -> normalize -> (G,S,C) new"
+</MoneySystem>

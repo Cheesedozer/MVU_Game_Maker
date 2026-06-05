@@ -1,0 +1,70 @@
+<DC_Determine_Guide>
+# v1.5
+When to use
+	If an action outcome is uncertain, a DC check must be performed.
+Roll Source
+	The rolled data is based on three dice rolls combined:
+	Formula: ((({{roll:d20}} * {{roll:d20}} + {{roll:d20}}) mod 20) + 1)
+	This produces a final integer from 1–20. Use this value as the D20 roll result.
+
+	ROLL LOCK — MANDATORY:
+	1. The three {{roll:d20}} expressions resolve to FIXED values the instant you begin the roll step.
+	   Write the first values that resolve as r1, r2, r3 in ONE committed line before doing any arithmetic.
+	   You do NOT pick, choose, or select these values. They are fate. There is no iteration.
+	   FORBIDDEN: testing multiple r1/r2/r3 combinations to find a favorable result.
+	   FORBIDDEN: writing "let me try…", "let me pick…", or "what if r1=…" at any point.
+	   If you wrote more than one set of r1/r2/r3 values: you have already cheated. Discard all of them.
+	   Use the FIRST set you committed to. If none was committed first, the roll is a Critical Failure (1).
+	2. Compute the formula ONCE using the committed r1/r2/r3. The first result is final. No re-computation.
+	3. There is exactly ONE formula. "Roll Source" and "Step 2" show the same formula — not two
+	   different sources. Do NOT use this as a pretext to substitute different numbers.
+	4. Narrative inconvenience does NOT permit a re-roll. A Critical Failure must be written
+	   as a Critical Failure. Searching for an alternative combination to escape the result is cheating.
+	5. If you find yourself computing the roll a second time with different numbers: STOP.
+	   Discard the second result. The first committed computation stands, regardless of outcome.
+Determination Process
+	Step 1_Set Difficulty (AI Dynamic Assessment)
+		Description: AI must dynamically determine Difficulty Class (DC) using scenario logic, character capability, and challenge level. Fixed D&D DC standards must NOT be blindly applied.
+		Conceptual DC Reference (guideline only — genre-specific systems may override):
+			Note: Max achievable Total Value is ~25 (D20 roll 1–20 + modifiers up to ~5).
+			      Critical Success (D20 = 20) auto-succeeds regardless of DC.
+			Routine     (DC  5– 9): Standard tasks; any roll with modest modifier succeeds.
+			Challenging (DC 10–14): Requires average roll + some modifier.
+			Hard        (DC 15–18): Needs a good roll + decent modifier.
+			Heroic      (DC 19–22): Near-maximum roll + strong modifier required.
+			Mythic      (DC 23–25): Only beatable with max everything; Critical Success is the reliable path.
+	Step 2_Simulate Dice Roll
+		Description: Evaluate the three-roll formula from Roll Source to produce the D20 result.
+		Formula: ((({{roll:d20}} * {{roll:d20}} + {{roll:d20}}) mod 20) + 1)
+		Evaluate all three {{roll:d20}} values, apply the formula, and use the result as the D20 roll.
+		Format: [D20=(r1 * r2 + r3) mod 20 + 1 = Result]
+	Step 3_Calculate Total Value
+		Description: Compute final determination value using character capability
+		Formula: Total Value = D20 Roll Result + Attribute Modifier + Other Bonuses
+		Attribute Modifier: Relevant Attribute ÷ 10 (rounded down). This replaces the old (Attribute-10)/2 rule
+		Other Bonuses: Bonuses from Talents, Skills, Backgrounds, or Items
+	Step 4_Determination Result (Top-Down Priority)
+		Description: Resolve results in strict order. First condition met becomes final result. Raw roll has highest priority.
+		Rules:
+			Critical Success: D20 roll = 20  , which means auto sucess regardless of score.
+			Critical Failure: D20 roll = 1
+			Success: Total Value ≥ DC
+			Failure: Total Value < DC but not a Critical Failure
+	Step 5_Narrative Presentation
+		Description: Present both process and outcome through immersive narration rather than raw numbers
+		Excellent Example: [D20=18] You focus your mind, recalling ancient techniques (Int Modifier +4). Your final attempt (22) barely exceeds the difficulty of breaking the seal (DC=20). The seal unlocks with a click.
+		Bad Example: You rolled 18, plus 4 equals 22, greater than 20, check successful.
+Automatic Background Checks
+	Core Instructions
+		1. AI must automatically perform passive environment checks in the background
+		2. If the check succeeds, generate narrative discovery
+		3. If the check fails, remain silent
+	Output Format
+		[<Skill Name> Check: Success] <Description of discovery>
+	Check Examples
+		[Insight Check: Success] When the other party mentioned the "goods," their gaze flickered toward the floor.
+		[Survival Check: Success] The edges of the footprints are clear; you judge they belong to an adult Owlbear.
+		[Investigation Check: Success] On the bookshelf, one book spine is more worn than the others.
+		[Arcana Check: Success] The wall runes match symbols from an ancient tome belonging to the Storm Cult.
+		[Perception Check: Success] Within the rubble, a piece of metal reflects candlelight.
+</DC_Determine_Guide>

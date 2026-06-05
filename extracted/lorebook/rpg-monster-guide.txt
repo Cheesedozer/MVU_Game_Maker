@@ -1,0 +1,103 @@
+<monster_guide>
+  Version 2.6
+  Purpose: Fast, reliable monster generation with clear formulas and strict pacing.
+
+  0) Priority Rule (Most Important)
+    - If numbers conflict with pacing, numbers wins.
+    - Required pacing windows:
+      - Common: 1–2 rounds
+      - Elite: 2–3 rounds
+      - Boss: 4–8 rounds
+
+  1) Source of Truth (Do Not Rebuild Stats)
+    - Read ALL player/familiar stats ONLY from <CURRENT_VARIABLE_DATA> (GUI/panel values):
+      - N = participating party members
+      - P_Level = player average level
+      - P_HP = Hp_max
+      - P_Atk = Physical_attack (NEVER recalculate from Str + Level formula)
+      - P_Def = Physical_defense or Magic_defense (as needed)
+      - M_Atk = Magic_attack
+      - Agi = Agility
+    - These values already include equipment bonuses and are GUI-calculated.
+    - NEVER manually derive or add armor/equipment bonuses.
+    - NEVER recalculate player stats using formulas (e.g., Str × 2 + Level × 2).
+    - Combat damage resolution must follow <battle_system_text_rpg>.
+
+  2) Encounter Floor Rules
+    - In normal content (non-tutorial, non-low-risk):
+      - Normal mobs: Lv >= P_Level
+      - Mid-dungeon+: Lv >= P_Level + 1
+      - Near boss area: Lv >= P_Level + 2
+      - Boss appears only in boss area / plot node.
+
+  3) Global Scaling
+    - LvScale = clamp(0.6, 2.0, MonsterLevel / P_Level)
+    - Use LvScale to compress HP when monster level is below player level.
+
+  4) EXP Rules
+    - Common: 150 EXP
+    - Elite: 300 EXP
+    - Boss: 1000–2000 EXP
+    - Level modifier: Enemy higher → +10% EXP per level diff | Enemy lower → -10% EXP per level diff
+    - Formula: Final_EXP = Base_EXP × (1 + Level_Diff × 0.1)
+    - Example: Lv 72 Elite vs Lv 67 Party → 300 × (1 + 5 × 0.1) = 300 × 1.5 = 450 EXP
+
+  5) Monster Templates
+
+    5.1 Common (Fodder)
+      - Role: quick kill / catharsis
+      - HP = P_HP × 1.0 × LvScale
+      - Defense = Lv × 1.8
+      - P.Atk = round(Lv × 6.5) + 10
+      - Constraints:
+        - must not one-hit KO
+        - medium success can kill or cripple
+        - do not drag to round 3 unless monster is 5+ levels above player
+
+    5.2 Elite (Pressure Unit)
+      - Role: force healing/defense decisions
+      - HP = P_HP × 1.5 × LvScale
+      - Defense = round(Lv × 2.6)
+      - P.Atk = round(Lv × 7.0) + 15
+      - Actions:
+        - base 1 action
+        - may take 2 actions in key rounds when N >= 3
+      - Constraints:
+        - must not one-hit KO
+        - by round 2 player should feel pressure
+        - round 3 should usually allow kill (unless plot or 3+ level gap)
+
+    5.3 Boss (Dramatic Node)
+      - Role: resource drain + crisis test
+      - HP = P_HP × N 
+      - Defense = Lv × 3.2
+      - Passive Damage Reduction = N × 3%
+      - P.Atk = round(Lv × (7.4 + Lv / 200)) + 20
+      - Actions = 1 + floor(N / 2)
+      - Must have AOE or multi-pressure skills.
+      - Boss cannot be instant-killed on turn 1, even on critical success.
+      - Phase script:
+        1) Engagement
+        2) Pressure (severely injure one member)
+        3) Crisis (team near critical)
+        4) Execute / Defeat
+
+  6) AI Discretion (Allowed)
+    - You may compress/blur HP narration for pacing.
+    - You may narrate Commons as incapacitated when effectively out of the fight.
+    - You may prevent slog from repeated bad rolls.
+    - Hard prohibition: never violate pacing windows.
+
+  7) Post-Battle Settlement
+    - Deduct real HP/MP/SP costs.
+    - Give rewards (money/materials).
+    - Equipment drop gate/rarity rules come only from <battle_system_text_rpg>.
+    - Give full EXP to Mainchar and ALL familiars regardless of battle team or presence.
+    - On EXP >= 1000: level up; grant 5 core points; prompt allocation in red text.
+
+  8) One-Page Summary
+    - Common = fast cleanup
+    - Elite = tactical pressure
+    - Boss = 4–8 round drama
+    - Pacing is law; formulas are tools
+</monster_guide>
