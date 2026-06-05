@@ -3353,6 +3353,21 @@ async function updateLorebookContent(root) {
 // --- MVU Event Logic (Native) ---
 let _lastStatData = null;
 let _lastSaveTime = 0;
+let _lastRenderedHash = null;
+let _pollTimer = null;
+
+// Render gate: paint only when stat_data is structurally ready, and skip redundant
+// re-renders (idempotency). Prevents blank/half panels and render thrash on swipe/regen.
+function isStatDataReady(d) { return !!(d && typeof d === 'object' && d.Mainchar); }
+async function renderIfChanged(stat) {
+    if (!isStatDataReady(stat)) return false;
+    const hash = JSON.stringify(stat);
+    if (hash === _lastRenderedHash) return true;
+    await updateStatusPanel({ stat_data: stat });
+    _lastStatData = JSON.parse(hash);
+    _lastRenderedHash = hash;
+    return true;
+}
 
 const parseMessageIdFromName = (name) => {
     if (!name || typeof name !== 'string' || !name.includes('message')) return -1;
@@ -3418,11 +3433,7 @@ const refreshFromMvu = async () => {
         // NEW: Cooldown check to prevent race condition
         if (Date.now() - _lastSaveTime < 2000) return;
 
-        const isDifferent = JSON.stringify(latestStatData) !== JSON.stringify(_lastStatData);
-        if (isDifferent) {
-            await updateStatusPanel({ stat_data: latestStatData });
-            _lastStatData = JSON.parse(JSON.stringify(latestStatData));
-        }
+        await renderIfChanged(latestStatData);
     }
 };
 
@@ -3464,38 +3475,39 @@ const initMvuConnection = async () => {
             }
         }
         
-        if (initialStat) {
-            await updateStatusPanel({ stat_data: initialStat });
-            _lastStatData = JSON.parse(JSON.stringify(initialStat));
-        }
+        await renderIfChanged(initialStat);
     }
 
-    // 3. Event Scubscription
+    // 3. Event subscription — single, idempotent, with teardown.
+    // The listener lives on the (shared) parent window, so without this an old handler
+    // referencing a dead iframe accumulates on every message/swipe/regen. Remove any
+    // handler a previous iframe instance registered, then add exactly one and tear it
+    // down on pagehide.
     if (target.eventOn && Mvu && Mvu.events && Mvu.events.VARIABLE_UPDATE_ENDED) {
-        target.eventOn(Mvu.events.VARIABLE_UPDATE_ENDED, async (data) => {
-             // Check if we are editing
-             const modal = document.getElementById("portrait-mode-modal");
-             if (modal && modal.style.display === "flex") return;
-             if (Date.now() - _lastSaveTime < 1000) return;
-
-             // Use Lodash to extract data safely
-             let stat = null;
-             if (_ && _.get) {
-                 stat = _.get(data, 'stat_data');
-             } else {
-                 stat = data?.stat_data;
-             }
-
-             // If data came in directly
-             if (stat) {
-                 await updateStatusPanel({ stat_data: stat });
-                 _lastStatData = JSON.parse(JSON.stringify(stat));
-             }
-        });
+        const EVT = Mvu.events.VARIABLE_UPDATE_ENDED;
+        if (target.__mzsmbRpgStatusHandler && target.eventRemoveListener) {
+            try { target.eventRemoveListener(EVT, target.__mzsmbRpgStatusHandler); } catch (e) {}
+        }
+        const handler = async (data) => {
+            const modal = document.getElementById("portrait-mode-modal");
+            if (modal && modal.style.display === "flex") return;
+            if (Date.now() - _lastSaveTime < 1000) return;
+            const stat = (_ && _.get) ? _.get(data, 'stat_data') : data?.stat_data;
+            await renderIfChanged(stat);
+        };
+        target.eventOn(EVT, handler);
+        target.__mzsmbRpgStatusHandler = handler;
+        window.addEventListener('pagehide', () => {
+            try { if (target.eventRemoveListener) target.eventRemoveListener(EVT, handler); } catch (e) {}
+            if (target.__mzsmbRpgStatusHandler === handler) target.__mzsmbRpgStatusHandler = null;
+            if (_pollTimer) { clearInterval(_pollTimer); _pollTimer = null; }
+        }, { once: true });
     }
 
-    // Polling Fallback (Runs in parallel to catch missed events)
-    setInterval(refreshFromMvu, 2000);
+    // Bounded safety poll to catch any missed event. The event is primary; this is
+    // cleared on pagehide (above) so timers can't accumulate across iframe re-creation.
+    if (_pollTimer) clearInterval(_pollTimer);
+    _pollTimer = setInterval(refreshFromMvu, 2000);
 
     return initialStat;
 };
