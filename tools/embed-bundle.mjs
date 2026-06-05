@@ -144,6 +144,54 @@ for (const f of smap.files) {
   edits.push({ file: f.file, rawStart: map[first], rawEnd: map[first + oldTok.length], replacement: backtickEscape(JSON.stringify(newValue)) });
 }
 
+// ---- Additions: new entries/scripts present in extracted/manifest.json but not in the
+// live card (matched by id) are inserted into the raw arrays. This is how a new "module"
+// reaches dist/index.html end-to-end. (Existing items are content-patched above; changing
+// an existing item's metadata is not yet supported and will trip the deep-equal guard.) ----
+function matchBracket(s, i) {
+  const open = s[i], close = open === '[' ? ']' : '}';
+  let depth = 0, inStr = false;
+  for (let k = i; k < s.length; k++) {
+    const c = s[k];
+    if (inStr) { if (c === '\\') { k++; continue; } if (c === '"') inStr = false; continue; }
+    if (c === '"') { inStr = true; continue; }
+    if (c === open) depth++;
+    else if (c === close) { depth--; if (depth === 0) return k; }
+  }
+  return -1;
+}
+let composedCard = null;
+const manifestPath = path.join(OUT, 'manifest.json');
+if (fs.existsSync(manifestPath)) {
+  const isRef = (v) => v && typeof v === 'object' && typeof v.$file === 'string';
+  const resolveRef = (ref) => {
+    let c = fs.readFileSync(path.join(OUT, ref.$file), 'utf8');
+    if (!ref.finalNewline && c.endsWith('\n')) c = c.slice(0, -1);
+    return ref.json ? JSON.parse(c) : (ref.prefix || '') + c + (ref.suffix || '');
+  };
+  const composeNode = (n) => isRef(n) ? resolveRef(n)
+    : Array.isArray(n) ? n.map(composeNode)
+    : (n && typeof n === 'object') ? Object.fromEntries(Object.keys(n).map(k => [k, composeNode(n[k])])) : n;
+  composedCard = composeNode(JSON.parse(fs.readFileSync(manifestPath, 'utf8')));
+
+  const arrays = [
+    { key: '"entries":[', live: card.character_book?.entries || [], want: composedCard.character_book?.entries || [] },
+    { key: '"regex_scripts":[', live: card.extensions?.regex_scripts || [], want: composedCard.extensions?.regex_scripts || [] },
+    { key: '"scripts":[', live: card.extensions?.tavern_helper?.scripts || [], want: composedCard.extensions?.tavern_helper?.scripts || [] },
+  ];
+  for (const a of arrays) {
+    const liveIds = new Set(a.live.map(x => x && x.id).filter(Boolean));
+    const additions = a.want.filter(x => x && x.id && !liveIds.has(x.id));
+    if (!additions.length) continue;
+    const kIdx = json.indexOf(a.key);
+    assert(kIdx >= 0 && json.indexOf(a.key, kIdx + 1) === -1, `cannot uniquely locate array ${a.key} for additions`);
+    const closeIdx = matchBracket(json, kIdx + a.key.length - 1);
+    assert(closeIdx > 0, `cannot find end of array ${a.key}`);
+    const chunk = (a.live.length > 0 ? ',' : '') + additions.map(el => backtickEscape(JSON.stringify(el))).join(',');
+    edits.push({ file: `(+${additions.length} new in ${a.key})`, rawStart: map[closeIdx], rawEnd: map[closeIdx], replacement: chunk });
+  }
+}
+
 // ---- Apply edits to the raw literal (descending offset, so ranges stay valid) ----
 edits.sort((a, b) => b.rawStart - a.rawStart);
 let newRaw = lit.raw;
@@ -154,20 +202,30 @@ const byteIdentical = newBundle === src;
 
 // ---- Verify the rebuilt literal re-extracts to the intended card ----
 const rebuilt = JSON.parse(decodeWithMap(newRaw).json);
-const intended = JSON.parse(json);
-for (const f of smap.files) { /* fold edits into `intended` for the deep check */
-  const abs = path.join(OUT, f.file); if (!fs.existsSync(abs)) continue;
-  let content = fs.readFileSync(abs, 'utf8'); if (!f.hadFinalNewline && content.endsWith('\n')) content = content.slice(0, -1);
-  const v = f.kind === 'variables' ? JSON.parse(content) : (f.prefix || '') + content + (f.suffix || '');
-  if (f.kind === 'entry') intended.character_book.entries[f.index].content = v;
-  else if (f.kind === 'regex') intended.extensions.regex_scripts[f.index].replaceString = v;
-  else if (f.kind === 'thscript') intended.extensions.tavern_helper.scripts[f.index].content = v;
-  else if (f.kind === 'variables') intended.extensions.tavern_helper.variables = v;
+let intended;
+if (composedCard) {
+  // With a manifest, the target is unambiguous: dist must become exactly the composed card
+  // (existing content patched + any new modules inserted). This also guards against
+  // unsupported metadata edits to existing items — they would fail this deep-equal.
+  intended = composedCard;
+} else {
+  intended = JSON.parse(json);
+  for (const f of smap.files) { /* fold edits into `intended` for the deep check */
+    const abs = path.join(OUT, f.file); if (!fs.existsSync(abs)) continue;
+    let content = fs.readFileSync(abs, 'utf8'); if (!f.hadFinalNewline && content.endsWith('\n')) content = content.slice(0, -1);
+    const v = f.kind === 'variables' ? JSON.parse(content) : (f.prefix || '') + content + (f.suffix || '');
+    if (f.kind === 'entry') intended.character_book.entries[f.index].content = v;
+    else if (f.kind === 'regex') intended.extensions.regex_scripts[f.index].replaceString = v;
+    else if (f.kind === 'thscript') intended.extensions.tavern_helper.scripts[f.index].content = v;
+    else if (f.kind === 'variables') intended.extensions.tavern_helper.variables = v;
+  }
 }
 assert.deepStrictEqual(rebuilt, intended, 'rebuilt card does not match intended edits — aborting');
 
 // ---- Report / write ----
-console.log(`Card "${card.name}": ${edits.length} value(s) changed, ${missing} file(s) missing.`);
+const addCount = edits.filter(e => e.file.startsWith('(+')).reduce((n, e) => n + (parseInt(e.file.slice(2)) || 0), 0);
+const valCount = edits.length - edits.filter(e => e.file.startsWith('(+')).length;
+console.log(`Card "${card.name}": ${valCount} value(s) changed, ${addCount} item(s) added, ${missing} file(s) missing.`);
 console.log(`  dist/index.html byte-identical to current: ${byteIdentical}`);
 console.log(`  rebuilt card matches intended edits:        true`);
 if (CHECK) {
