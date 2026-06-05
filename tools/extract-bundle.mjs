@@ -104,39 +104,50 @@ function detectVersion(t) {
   return m ? m[1] : '';
 }
 
-function write(group, dir, base, ext, text, meta = {}) {
+function write(group, dir, base, ext, text, meta = {}, locator = null, prefix = '', suffix = '') {
   if (!base) base = group;
   let name = `${base}.${ext}`;
   if (used.has(path.join(dir, name))) name = `${base}-${sha1(text).slice(0, 6)}.${ext}`;
   used.add(path.join(dir, name));
   const abs = path.join(OUT, dir, name);
   fs.mkdirSync(path.dirname(abs), { recursive: true });
-  fs.writeFileSync(abs, text.endsWith('\n') ? text : text + '\n');
-  records.push({ group, file: `${dir}/${name}`, bytes: Buffer.byteLength(text), version: detectVersion(text), sha1: sha1(text), meta });
+  // A trailing newline is added for readability; the source map records whether the
+  // original value already ended in one, so the embedder can round-trip exactly.
+  const hadFinalNewline = text.endsWith('\n');
+  fs.writeFileSync(abs, hadFinalNewline ? text : text + '\n');
+  records.push({
+    group, file: `${dir}/${name}`, bytes: Buffer.byteLength(text),
+    version: detectVersion(text), sha1: sha1(text), meta,
+    locator, prefix, suffix, hadFinalNewline,
+  });
 }
 
 // ---- Lorebook entries ----
-for (const e of data.character_book?.entries ?? []) {
+data.character_book?.entries?.forEach((e, i) => {
   const label = e.comment || (Array.isArray(e.keys) && e.keys[0]) || `entry-${e.id}`;
   write('lorebook', 'lorebook', slug(label) || `entry-${e.id}`, 'txt', e.content ?? '', {
     comment: e.comment, id: e.id, enabled: e.enabled !== false && !e.disable,
     constant: !!e.constant, position: e.position, order: e.insertion_order ?? e.order,
     keys: Array.isArray(e.keys) ? e.keys : [],
-  });
-}
+  }, { kind: 'entry', index: i });
+});
 
 // ---- GUI / display regex scripts ----
-for (const r of data.extensions?.regex_scripts ?? []) {
-  const text = String(r.replaceString ?? '').replace(/^```\w*\n?/, '').replace(/\n?```$/, '');
+data.extensions?.regex_scripts?.forEach((r, i) => {
+  const raw = String(r.replaceString ?? '');
+  const pre = (raw.match(/^```\w*\n?/) || [''])[0];
+  let rest = raw.slice(pre.length);
+  const suf = (rest.match(/\n?```$/) || [''])[0];
+  const text = rest.slice(0, rest.length - suf.length);
   const ext = /<!DOCTYPE|<html|<body|<div|<script|<style/i.test(text.slice(0, 300)) ? 'html'
     : /^\s*(\(function|function |const |let |var |window\.|document\.|\/\/|\/\*)/.test(text) ? 'js' : 'txt';
-  write('gui', 'gui', slug(r.scriptName) || 'regex-script', ext, text || '(empty replaceString)', {
+  write('gui', 'gui', slug(r.scriptName) || 'regex-script', ext, text, {
     scriptName: r.scriptName, findRegex: r.findRegex, disabled: !!r.disabled,
-  });
-}
+  }, { kind: 'regex', index: i }, pre, suf);
+});
 
 // ---- Tavern Helper runtime scripts (+ schema registration) ----
-for (const sc of data.extensions?.tavern_helper?.scripts ?? []) {
+data.extensions?.tavern_helper?.scripts?.forEach((sc, i) => {
   const text = String(sc.content ?? '');
   const isSchema = /registerMvuSchema|^\s*import\b/.test(text);
   let base = slug(sc.name);
@@ -145,13 +156,15 @@ for (const sc of data.extensions?.tavern_helper?.scripts ?? []) {
       : /數值監護|onVariableUpdateEnded/.test(text) ? 'stat-guardian-script'
       : isSchema ? 'register-mvu-schema' : 'tavern-helper-script';
   }
-  if (isSchema) write('schema', 'schema', base, 'js', text, { name: sc.name });
-  else write('script', 'scripts', base, 'js', text, { name: sc.name });
-}
+  const [grp, dir] = isSchema ? ['schema', 'schema'] : ['script', 'scripts'];
+  write(grp, dir, base, 'js', text, { name: sc.name }, { kind: 'thscript', index: i });
+});
 
 // ---- Initial variable / stat tree ----
 if (data.extensions?.tavern_helper?.variables) {
-  write('data', 'data', 'initial-variables', 'json', JSON.stringify(data.extensions.tavern_helper.variables, null, 2));
+  write('data', 'data', 'initial-variables', 'json',
+    JSON.stringify(data.extensions.tavern_helper.variables, null, 2),
+    {}, { kind: 'variables' });
 }
 
 // ---- Embedded base64 assets (walk every string value) ----
@@ -176,6 +189,16 @@ let assetN = 0;
 const cardForRef = JSON.parse(JSON.stringify(data, (k, v) =>
   (typeof v === 'string' && /^data:[a-z]+\/[a-z0-9.+-]+;base64,/i.test(v)) ? `«base64 elided, ${v.length} bytes — see extracted/assets/»` : v));
 fs.writeFileSync(path.join(OUT, 'card.json'), JSON.stringify(cardForRef, null, 2));
+
+// ---- Machine-readable source map: lets tools/embed-bundle.mjs apply edits back ----
+const sourceMap = {
+  bundle: 'dist/index.html',
+  bundleSha1: sha1(src),
+  files: records
+    .filter(r => r.locator && r.locator.kind)
+    .map(r => ({ file: r.file, ...r.locator, prefix: r.prefix || '', suffix: r.suffix || '', hadFinalNewline: !!r.hadFinalNewline })),
+};
+fs.writeFileSync(path.join(OUT, 'sourcemap.json'), JSON.stringify(sourceMap, null, 2));
 
 // ---- Validate runtime script syntax (best-effort; report only) ----
 const jsInvalid = [];
