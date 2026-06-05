@@ -1,3 +1,5 @@
+<%# Stage 1c gate: render combat-only rules unless the scene is a known-safe mode (safe-degrading; injects when state unreadable). %>
+<% let _m; try { _m = getvar("stat_data.World.Mode", { scope: "message" }); } catch (e) { _m = undefined; } if (Array.isArray(_m)) _m = _m[0]; const _safeMode = (typeof _m === "string") && ["dialogue","shop","town","safe","social","rest"].includes(_m.trim().toLowerCase()); if (getvar("mvu_panic_all_constant") === true || !_safeMode) { %>
 #v1.6
 # main diff is no seal quest
 <combat_calculation_detail>
@@ -103,4 +105,4 @@
       # IF no combat occurred:
       #   - Leave this block completely empty (no content between tags)
 </combat_log_detail>
-
+<% } %>

@@ -31,7 +31,11 @@ In your thinking block, BEFORE writing <gametxt>, analyze:
 - Time/Location:
   • Calculate time passed and any location changes
   • If in a non-safe (monster) area → check <encounter_guide> for monster encounters
-  • If in a safe (no-monster) area → check <encounter_guide> for heroine encounters. 
+  • If in a safe (no-monster) area → check <encounter_guide> for heroine encounters.
+- Scene Mode (REQUIRED every reply):
+  • Decide World.Mode for the scene you are about to write, one of: exploration | combat | dialogue | shop | town.
+  • Use "combat" whenever a fight is occurring OR clearly about to start this reply; use "exploration" when traveling/in the field (combat may erupt); use "dialogue", "shop", or "town" only for clearly safe, non-combat scenes.
+  • Emit it in the JSONPatch: replace /stat_data/World/Mode/0 with the chosen value. (This is a state field, not a derived stat — you MUST set it.)
 - Quest:
   • Quest name MUST NOT contain "." or "/" (convert to " " or "_")
   • Should we have a new quest or existing quest proceed to next stage?
