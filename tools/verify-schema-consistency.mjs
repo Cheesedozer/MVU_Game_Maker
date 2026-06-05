@@ -61,9 +61,25 @@ for (const name of script) {
 // the emit contract must actually forbid emitting them
 if (!/DO NOT EMIT/i.test(outSyntax)) failures.push(`rpg-output-syntax.txt missing the "DO NOT EMIT" derived-stat rule`);
 
+// (5) Equipment-bonus reconciliation parity. The recompute (rpg-scheme.js) and the GUI recalc
+// copies (status + level-up panels) must read the SAME set of equipment bonus fields, or an
+// item's bonus would apply in one place but not another (panel/save divergence — the exact bug
+// this system has). `item.<Field>` reads ending in Bonus/Damage are unique to those loops.
+const equipReads = (file) =>
+  new Set([...read(file).matchAll(/\bitem\.([A-Za-z]+(?:Bonus|Damage))\b/g)].map((m) => m[1]));
+const eqScript = equipReads('extracted/schema/rpg-scheme.js');
+const eqStatus = equipReads('extracted/gui/rpg-statusmenu.html');
+const eqLevel = equipReads('extracted/gui/rpg-leveluppanel.html');
+if (eqScript.size === 0) failures.push('no equipment-bonus reads found in rpg-scheme.js recompute');
+if (!setEq(eqScript, eqStatus)) failures.push(`equipment-bonus reads differ (recompute vs status panel):\n    recompute: ${[...eqScript].sort().join(', ')}\n    status:    ${[...eqStatus].sort().join(', ')}`);
+if (!setEq(eqScript, eqLevel)) failures.push(`equipment-bonus reads differ (recompute vs level-up panel):\n    recompute: ${[...eqScript].sort().join(', ')}\n    levelup:   ${[...eqLevel].sort().join(', ')}`);
+const eqGuide = read('extracted/lorebook/rpg-equipment-guide.txt');
+for (const f of eqScript) if (!eqGuide.includes(f)) failures.push(`equipment bonus ${f} is reconciled but not documented in rpg-equipment-guide.txt`);
+
 if (failures.length) {
   console.error('Schema/derived-stat consistency FAILED:');
   for (const m of failures) console.error('  ✗ ' + m);
   process.exit(1);
 }
 console.log(`✓ Derived-stat contract consistent across script, GUI, and prompt text: ${[...script].sort().join(', ')}`);
+console.log(`✓ Equipment-bonus reconciliation consistent (recompute = status = level-up), documented: ${[...eqScript].sort().join(', ')}`);

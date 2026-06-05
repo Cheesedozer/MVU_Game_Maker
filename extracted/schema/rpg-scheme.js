@@ -68,6 +68,9 @@ const worldSchema = z
     // Stage 1c: scene mode set by the AI each reply (exploration|combat|dialogue|shop|town).
     // Used to gate combat-only rule entries; defaults to exploration (combat rules stay on).
     Mode: labeledStr,
+    // Optional map image shown by the status panel; declared so it is preserved (worldSchema is
+    // not passthrough, so undeclared World fields would be stripped on validation).
+    MapImage: labeledStr,
   })
   .prefault({});
 
@@ -131,6 +134,22 @@ const maincharSchema = z
         Slot: z.string().prefault(''),
         EquipmentLevel: z.coerce.number().prefault(0),
         Appearance: z.string().prefault(''),
+        // Equipment bonuses (additive). Documented in <equipment_budget_system>; reconciled into
+        // derived stats by the recompute and GUI. Direct bonuses feed derived stats; core-stat
+        // bonuses (Str/Agi/Con/Int/Wis) feed EFFECTIVE attributes. ChaBonus is schema-only (no
+        // derived consumer). Stored on the equipped item; never baked into base attributes.
+        WeaponDamage: z.coerce.number().prefault(0),
+        WeaponMagDamage: z.coerce.number().prefault(0),
+        ArmorPDefBonus: z.coerce.number().prefault(0),
+        ArmorMDefBonus: z.coerce.number().prefault(0),
+        MaxHPBonus: z.coerce.number().prefault(0),
+        MaxMPBonus: z.coerce.number().prefault(0),
+        StrBonus: z.coerce.number().prefault(0),
+        AgiBonus: z.coerce.number().prefault(0),
+        ConBonus: z.coerce.number().prefault(0),
+        IntBonus: z.coerce.number().prefault(0),
+        WisBonus: z.coerce.number().prefault(0),
+        ChaBonus: z.coerce.number().prefault(0),
     })
     .passthrough()
     .prefault({})).prefault({}),
@@ -230,6 +249,22 @@ const familiarMemberSchema = z
         Slot: z.string().prefault(''),
         EquipmentLevel: z.coerce.number().prefault(0),
         Appearance: z.string().prefault(''),
+        // Equipment bonuses (additive). Documented in <equipment_budget_system>; reconciled into
+        // derived stats by the recompute and GUI. Direct bonuses feed derived stats; core-stat
+        // bonuses (Str/Agi/Con/Int/Wis) feed EFFECTIVE attributes. ChaBonus is schema-only (no
+        // derived consumer). Stored on the equipped item; never baked into base attributes.
+        WeaponDamage: z.coerce.number().prefault(0),
+        WeaponMagDamage: z.coerce.number().prefault(0),
+        ArmorPDefBonus: z.coerce.number().prefault(0),
+        ArmorMDefBonus: z.coerce.number().prefault(0),
+        MaxHPBonus: z.coerce.number().prefault(0),
+        MaxMPBonus: z.coerce.number().prefault(0),
+        StrBonus: z.coerce.number().prefault(0),
+        AgiBonus: z.coerce.number().prefault(0),
+        ConBonus: z.coerce.number().prefault(0),
+        IntBonus: z.coerce.number().prefault(0),
+        WisBonus: z.coerce.number().prefault(0),
+        ChaBonus: z.coerce.number().prefault(0),
     })
     .passthrough()
     .prefault({})).prefault({}),

@@ -52,6 +52,8 @@ In your thinking block, BEFORE writing <gametxt>, analyze:
   • If a character leaves, or the scene moves without them → they MUST be marked Is_present=false in the upcoming JSONPatch.
   • Off-scene characters MUST NOT have dialogue or actions in <gametxt> this reply.
 - Familiar Stat Influence (for every present Familiar, layer these on top of her base personality):
+  • NOTE: Affection, Lewdness, Control_desire, M_level, Sex_count are FAMILIAR-ONLY fields. Never emit
+    them on Mainchar (Mainchar has no such fields; the validator will reject them).
   NON-SEXUAL SCENES:
   • Affection: high → warm, protective, openly caring tone; low → distant, guarded, or coldly polite.
   • Control_desire: high → she actively tries to redirect or override Mainchar's decisions, issues instructions,
