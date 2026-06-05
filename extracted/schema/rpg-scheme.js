@@ -259,3 +259,122 @@ export const StatDataSchema = z
 $(() => {
   registerMvuSchema(StatDataSchema);
 });
+
+// =====================================================================================
+// Stage 1b — Derived-stat recompute (deterministic, authoritative)
+// -------------------------------------------------------------------------------------
+// The AI only emits BASE stats (Level, Str/Agi/Con/Int/Wis/Cha) and current resources
+// (Hp_curr/Mp_curr/Sta_curr). All DERIVED stats are recomputed here on every
+// VARIABLE_UPDATE_ENDED, so the model can never drift them and never double-applies.
+// Formulas mirror the GUI's recalculateDerivedStats() exactly (see <character_attributes_system>
+// and rpg-statusmenu.html), so the panel and the saved state always agree — even when the
+// status panel iframe is closed, which is exactly when the AI reads CURRENT_VARIABLE_DATA.
+// Idempotent: it only writes fields that actually change, so re-firing the event is a no-op
+// (no recompute loop).
+// =====================================================================================
+const RPG_RECOMPUTE_VERSION = 'v1.0';
+
+const _isTuple = (v) => Array.isArray(v) && v.length >= 2 && typeof v[1] === 'string';
+const _num = (v) => { const n = _isTuple(v) ? v[0] : v; const x = Number(n); return Number.isFinite(x) ? x : 0; };
+const _getN = (obj, key, def) => {
+  if (!obj || !(key in obj)) return def;
+  const v = obj[key]; const n = _isTuple(v) ? v[0] : v; const x = Number(n);
+  return Number.isFinite(x) ? x : def;
+};
+const _setN = (obj, key, val) => {
+  const cur = obj[key];
+  if (_isTuple(cur)) { if (cur[0] !== val) { obj[key] = [val, cur[1]]; return 1; } return 0; }
+  if (cur !== val) { obj[key] = val; return 1; }
+  return 0;
+};
+
+function recomputeCharDerived(c) {
+  if (!c || typeof c !== 'object') return 0;
+  const Lvl = _getN(c, 'Level', 1), Con = _getN(c, 'Constitution', 0), Str = _getN(c, 'Strength', 0),
+        Agi = _getN(c, 'Agility', 0), Int = _getN(c, 'Intelligence', 0), Wis = _getN(c, 'Wisdom', 0);
+
+  let eqHP = 0, eqMP = 0, eqPAtk = 0, eqMAtk = 0, eqPDef = 0, eqMDef = 0;
+  if (c.Equipment && typeof c.Equipment === 'object') {
+    for (const item of Object.values(c.Equipment)) {
+      if (item && typeof item === 'object') {
+        eqHP += Number(item.MaxHPBonus || 0); eqMP += Number(item.MaxMPBonus || 0);
+        eqPAtk += Number(item.WeaponDamage || 0); eqMAtk += Number(item.WeaponMagDamage || 0);
+        eqPDef += Number(item.ArmorPDefBonus || 0); eqMDef += Number(item.ArmorMDefBonus || 0);
+      }
+    }
+  }
+
+  const oldMaxHp = _getN(c, 'Hp_max', 0), oldMaxMp = _getN(c, 'Mp_max', 0), oldMaxSta = _getN(c, 'Sta_max', 0);
+
+  const Hp_max  = Math.floor(20 + (Con * 3) + (Lvl * 6)) + eqHP;
+  const Sta_max = Math.floor(50 + (Con * 3) + (Agi * 2) + Math.floor((Lvl * 5) / 3));
+  const Mp_max  = Math.floor((50 + (Int * 4) + (Wis * 2) + (Lvl * 5)) / 3) + eqMP;
+  const P_Atk = Math.floor((Str * 2) + (Lvl * 2)) + eqPAtk;
+  const M_Atk = Math.floor((Int * 2) + (Lvl * 2)) + eqMAtk;
+  const P_Def = Math.floor((Con / 2) + (Lvl * 3)) + eqPDef;
+  const M_Def = Math.floor((Wis / 2) + (Lvl * 3)) + eqMDef;
+  const M_Ast = Math.floor((Wis * 1.5) + (Int * 0.5) + (Lvl * 1.5));
+
+  let changed = 0;
+  changed += _setN(c, 'Hp_max', Hp_max);
+  changed += _setN(c, 'Mp_max', Mp_max);
+  changed += _setN(c, 'Sta_max', Sta_max);
+  changed += _setN(c, 'Physical_attack', P_Atk);
+  changed += _setN(c, 'Magic_attack', M_Atk);
+  changed += _setN(c, 'Physical_defense', P_Def);
+  changed += _setN(c, 'Magic_defense', M_Def);
+  changed += _setN(c, 'Magic_assist', M_Ast);
+
+  // Level-up adjustment: grow current resources by the gain in their max (mirror GUI).
+  if (oldMaxHp > 0)  changed += _setN(c, 'Hp_curr',  Math.max(0, _getN(c, 'Hp_curr', 0)  + (Hp_max  - oldMaxHp)));
+  if (oldMaxMp > 0)  changed += _setN(c, 'Mp_curr',  Math.max(0, _getN(c, 'Mp_curr', 0)  + (Mp_max  - oldMaxMp)));
+  if (oldMaxSta > 0) changed += _setN(c, 'Sta_curr', Math.max(0, _getN(c, 'Sta_curr', 0) + (Sta_max - oldMaxSta)));
+
+  // Clamp current <= max.
+  if (_getN(c, 'Hp_curr', 0)  > Hp_max)  changed += _setN(c, 'Hp_curr', Hp_max);
+  if (_getN(c, 'Mp_curr', 0)  > Mp_max)  changed += _setN(c, 'Mp_curr', Mp_max);
+  if (_getN(c, 'Sta_curr', 0) > Sta_max) changed += _setN(c, 'Sta_curr', Sta_max);
+
+  return changed;
+}
+
+function onRpgVariableUpdateEnded(variables) {
+  try {
+    const stat = variables && variables.stat_data;
+    if (!stat || typeof stat !== 'object' || !stat.Mainchar) return; // RPG cards only
+    let changed = 0, chars = 0;
+    changed += recomputeCharDerived(stat.Mainchar); chars++;
+    if (stat.Familiar && typeof stat.Familiar === 'object') {
+      for (const [key, fam] of Object.entries(stat.Familiar)) {
+        if (key === '$meta' || key === 'template') continue;
+        if (fam && typeof fam === 'object' && ('Level' in fam || 'Constitution' in fam)) {
+          changed += recomputeCharDerived(fam); chars++;
+        }
+      }
+    }
+    if (changed > 0) console.log(`[RPG Recompute ${RPG_RECOMPUTE_VERSION}] recomputed ${chars} character(s), ${changed} field(s).`);
+  } catch (e) {
+    console.error('[RPG Recompute] failed:', e);
+  }
+}
+
+let _rpgRecomputeInit = false;
+function _rpgRecomputeStart() {
+  if (_rpgRecomputeInit) return;
+  const Mvu = (typeof window !== 'undefined') && (window.Mvu || (window.parent && window.parent.Mvu) || (window.top && window.top.Mvu));
+  if (Mvu && Mvu.events && Mvu.events.VARIABLE_UPDATE_ENDED && typeof eventOn === 'function') {
+    eventOn(Mvu.events.VARIABLE_UPDATE_ENDED, onRpgVariableUpdateEnded);
+    _rpgRecomputeInit = true;
+    console.log(`[RPG Recompute] ${RPG_RECOMPUTE_VERSION} started.`);
+  } else {
+    setTimeout(_rpgRecomputeStart, 1000);
+  }
+}
+$(() => setTimeout(_rpgRecomputeStart, 500));
+$(window).on('unload', () => {
+  const Mvu = (typeof window !== 'undefined') && (window.Mvu || (window.parent && window.parent.Mvu) || (window.top && window.top.Mvu));
+  if (Mvu && Mvu.events && typeof eventRemoveListener === 'function') {
+    try { eventRemoveListener(Mvu.events.VARIABLE_UPDATE_ENDED, onRpgVariableUpdateEnded); } catch (e) {}
+  }
+  _rpgRecomputeInit = false;
+});

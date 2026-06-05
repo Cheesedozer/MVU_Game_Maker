@@ -126,6 +126,16 @@ READ <combat_log_detail>
 # Do NOT rely on previous JSONPatch for stats/lore/events (may be stale)
 # Path keys MUST NOT contain "." or "/" (convert to "_")
 # Root path is always stat_data (e.g. stat_data.Mainchar.Strength)
+#
+# ⚠️ DERIVED STATS — DO NOT EMIT (auto-calculated for Mainchar and every Familiar):
+#   Hp_max, Mp_max, Sta_max, Physical_attack, Physical_defense, Magic_attack,
+#   Magic_defense, Magic_assist
+#   These are recomputed deterministically from base stats + equipment after every reply.
+#   NEVER include them in a JSONPatch — a patch to them is overwritten and only wastes output.
+#   You MAY still patch BASE stats (Level, Exp, Core-points, Strength, Agility, Constitution,
+#   Intelligence, Wisdom, Charisma) and CURRENT resources (Hp_curr, Mp_curr, Sta_curr).
+#   On LEVEL-UP: emit only the base attribute increases (and Level/Core-points); HP/MP/SP max
+#   and all Atk/Def values follow automatically — do not compute or emit them.
 
 <UpdateVariable>
   <UpdateAnalysis>

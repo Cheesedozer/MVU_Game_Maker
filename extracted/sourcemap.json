@@ -1,6 +1,6 @@
 {
   "bundle": "dist/index.html",
-  "bundleSha1": "98267ddf",
+  "bundleSha1": "a9f607b7",
   "files": [
     {
       "file": "lorebook/rpg-progression-system.txt",
