@@ -498,16 +498,44 @@
                 }
             };
 
-            // Auto-init with retry
-            let retryCount = 0;
+            // Auto-init: render now if data is ready; otherwise let the MVU update event
+            // drive the first paint, with a short bounded fallback poll. Replaces the blind
+            // 30x200ms retry so the panel is data-triggered, not time-triggered.
+            let _rendered = false;
+            let _lvUpRetries = 0;
+            const tryRender = () => {
+                if (_rendered) return true;
+                if (renderPanel() !== false) { _rendered = true; return true; }
+                return false;
+            };
+
+            if (!tryRender() && targetWindow && typeof targetWindow.eventOn === 'function'
+                && targetWindow.Mvu && targetWindow.Mvu.events && targetWindow.Mvu.events.VARIABLE_UPDATE_ENDED) {
+                const EVT = targetWindow.Mvu.events.VARIABLE_UPDATE_ENDED;
+                if (targetWindow.__mzsmbLevelUpHandler && targetWindow.eventRemoveListener) {
+                    try { targetWindow.eventRemoveListener(EVT, targetWindow.__mzsmbLevelUpHandler); } catch (e) {}
+                }
+                const handler = () => {
+                    if (tryRender() && targetWindow.eventRemoveListener) {
+                        try { targetWindow.eventRemoveListener(EVT, handler); } catch (e) {}
+                        if (targetWindow.__mzsmbLevelUpHandler === handler) targetWindow.__mzsmbLevelUpHandler = null;
+                    }
+                };
+                targetWindow.eventOn(EVT, handler);
+                targetWindow.__mzsmbLevelUpHandler = handler;
+                window.addEventListener('pagehide', () => {
+                    try { if (targetWindow.eventRemoveListener) targetWindow.eventRemoveListener(EVT, handler); } catch (e) {}
+                }, { once: true });
+            }
+
+            // Bounded fallback poll (≈3s) in case the event was missed, then surface an error.
             const attemptRender = () => {
-                const success = renderPanel();
-                if (success === false && retryCount < 30) {
-                    retryCount++;
-                    setTimeout(attemptRender, 200);
-                } else if (success === false) {
-                    console.error("[LvUpPanel] Failed to render panel after 30 attempts. stat_data could not be loaded.");
-                    document.getElementById('mvu-levelup-loading').textContent = "Error: Could not load stat_data. Please check SillyTavern console.";
+                if (tryRender()) return;
+                if (_lvUpRetries++ < 10) { setTimeout(attemptRender, 300); }
+                else {
+                    console.error("[LvUpPanel] Could not load stat_data within the fallback window.");
+                    const el = document.getElementById('mvu-levelup-loading');
+                    if (el) el.textContent = "Error: Could not load stat_data. Please check SillyTavern console.";
                 }
             };
 
