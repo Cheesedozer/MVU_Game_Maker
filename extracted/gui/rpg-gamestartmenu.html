@@ -662,40 +662,69 @@
                 };
             }
 
-            // Initialize state visually for all containers on load
+            // Apply the "already started" lock to one container if GameStarted is set. Idempotent.
+            const applyStartedLock = (c) => {
+                const sb = c.querySelector('.mzsmb-save-btn');
+                if (!sb) return false;
+                try {
+                    const targetWindow = typeof window.getVariables === 'function' ? window : (window.parent && typeof window.parent.getVariables === 'function' ? window.parent : null);
+                    if (targetWindow) {
+                        const currentMessageId = (typeof getCurrentMessageId === 'function') ? getCurrentMessageId() : -1;
+                        const chatVars = targetWindow.getVariables({ type: 'chat' }) || {};
+                        const msgVars = (currentMessageId >= 0)
+                            ? (targetWindow.getVariables({ type: 'message', message_id: currentMessageId }) || {})
+                            : {};
+
+                        const started = window.mzsmbGameStart.isGameStartedInVars(chatVars)
+                            || window.mzsmbGameStart.isGameStartedInVars(msgVars);
+
+                        if (started) {
+                            c.dataset.locked = "true";
+                            sb.dataset.locked = "true";
+                            sb.disabled = true;
+                            sb.textContent = "Journey Already Started";
+                            const statusEl = c.querySelector('.mzsmb-status');
+                            if (statusEl) {
+                                 statusEl.textContent = 'Character already created.';
+                                 statusEl.style.color = '#81d4fa';
+                            }
+                            return true;
+                        }
+                    }
+                } catch (e) {}
+                return false;
+            };
+
+            // Initial paint: lock-check + derived-preview recalc for all containers.
             setTimeout(() => {
                 document.querySelectorAll('.mzsmb-container').forEach(c => {
-                    const sb = c.querySelector('.mzsmb-save-btn');
-                    if (sb) {
-                        try {
-                            const targetWindow = typeof window.getVariables === 'function' ? window : (window.parent && typeof window.parent.getVariables === 'function' ? window.parent : null);
-                            if (targetWindow) {
-                                const currentMessageId = (typeof getCurrentMessageId === 'function') ? getCurrentMessageId() : -1;
-                                const chatVars = targetWindow.getVariables({ type: 'chat' }) || {};
-                                const msgVars = (currentMessageId >= 0)
-                                    ? (targetWindow.getVariables({ type: 'message', message_id: currentMessageId }) || {})
-                                    : {};
-
-                                const started = window.mzsmbGameStart.isGameStartedInVars(chatVars)
-                                    || window.mzsmbGameStart.isGameStartedInVars(msgVars);
-
-                                if (started) {
-                                    c.dataset.locked = "true";
-                                    sb.dataset.locked = "true";
-                                    sb.disabled = true;
-                                    sb.textContent = "Journey Already Started";
-                                    const statusEl = c.querySelector('.mzsmb-status');
-                                    if (statusEl) {
-                                         statusEl.textContent = 'Character already created.';
-                                         statusEl.style.color = '#81d4fa';
-                                    }
-                                }
-                            }
-                        } catch (e) {}
-                    }
+                    applyStartedLock(c);
                     window.mzsmbGameStart.recalcAll(c);
                 });
             }, 300);
+
+            // Event-driven re-lock: if GameStarted flips AFTER the panel loaded (the AI starts the
+            // journey in a later turn), re-apply the lock instead of leaving a stale editable form.
+            // Stage-1a pattern: single deduped subscription, self-aware teardown on pagehide. Only
+            // re-locks — never recalcs, so an in-progress point allocation is never disturbed.
+            (function subscribeStartedLock() {
+                const tw = (typeof window.eventOn === 'function') ? window
+                    : (window.parent && typeof window.parent.eventOn === 'function' ? window.parent : null);
+                if (!tw || !tw.Mvu || !tw.Mvu.events || !tw.Mvu.events.VARIABLE_UPDATE_ENDED) {
+                    setTimeout(subscribeStartedLock, 1000); // bounded wait until Mvu is ready
+                    return;
+                }
+                const EVT = tw.Mvu.events.VARIABLE_UPDATE_ENDED;
+                if (tw.__mzsmbGameStartHandler && tw.eventRemoveListener) {
+                    try { tw.eventRemoveListener(EVT, tw.__mzsmbGameStartHandler); } catch (e) {}
+                }
+                const handler = () => { document.querySelectorAll('.mzsmb-container').forEach(applyStartedLock); };
+                tw.eventOn(EVT, handler);
+                tw.__mzsmbGameStartHandler = handler;
+                window.addEventListener('pagehide', () => {
+                    try { if (tw.eventRemoveListener) tw.eventRemoveListener(EVT, handler); } catch (e) {}
+                }, { once: true });
+            })();
 
         })();
     </script>

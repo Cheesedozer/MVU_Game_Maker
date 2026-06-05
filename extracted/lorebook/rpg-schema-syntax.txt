@@ -16,7 +16,8 @@ World_Calc.(Factions,Locations,Ruins,Events)                    #record<string,a
 World_Calc.*                         #any (passthrough)
 
 World                                #object
-World.(Date,Time,Location,Weather)   #tuple<string,string>
+World.(Date,Time,Location,Weather,MapImage)   #tuple<string,string>
+World.Mode                           #tuple<string,string>  scene mode: exploration|combat|dialogue|shop|town|social|rest (default exploration)
 
 Mainchar                             #object
 Mainchar.(Name,Image,Race,Age,Gender,Occupation,Mental_state)              #tuple<string,string>
@@ -43,6 +44,12 @@ Mainchar.Equipment.{key}.Rarity      #string
 Mainchar.Equipment.{key}.Slot        #string
 Mainchar.Equipment.{key}.EquipmentLevel #number
 Mainchar.Equipment.{key}.Appearance  #string
+# Equipment bonuses (additive #number). Store them on the equipped item; the GUI/recompute
+# reconcile them into stats — do NOT hand-edit base/derived stats for equipment.
+# Direct bonuses → derived stats. Core-stat bonuses (Str/Agi/Con/Int/Wis) → EFFECTIVE attributes
+# (ChaBonus stored but inert). See <equipment_budget_system>.
+Mainchar.Equipment.{key}.(WeaponDamage,WeaponMagDamage,ArmorPDefBonus,ArmorMDefBonus,MaxHPBonus,
+MaxMPBonus,StrBonus,AgiBonus,ConBonus,IntBonus,WisBonus,ChaBonus)  #number
 Mainchar.Equipment.{key}.*           #any (passthrough)
 
 Mainchar.Inventory                   #record<string,object>
@@ -91,6 +98,8 @@ Familiar.{name}.Equipment.{key}.Rarity #string
 Familiar.{name}.Equipment.{key}.Slot #string
 Familiar.{name}.Equipment.{key}.EquipmentLevel #number
 Familiar.{name}.Equipment.{key}.Appearance #string
+Familiar.{name}.Equipment.{key}.(WeaponDamage,WeaponMagDamage,ArmorPDefBonus,ArmorMDefBonus,
+MaxHPBonus,MaxMPBonus,StrBonus,AgiBonus,ConBonus,IntBonus,WisBonus,ChaBonus)  #number
 Familiar.{name}.Equipment.{key}.*    #any (passthrough)
 
 Familiar.{name}.*                    #tuple<string|number|boolean|null|array|object,string> (catchall)
