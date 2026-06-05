@@ -200,6 +200,21 @@ const sourceMap = {
 };
 fs.writeFileSync(path.join(OUT, 'sourcemap.json'), JSON.stringify(sourceMap, null, 2));
 
+// ---- Module manifest: the FULL card structure with content fields replaced by
+// {$file} references. tools/build-card.mjs composes the card back from this + the
+// source files, so the card is declaratively defined (a feature = a file + a manifest
+// entry) and can be verified to reproduce the live card exactly. ----
+const manifest = JSON.parse(JSON.stringify(data));
+for (const r of records) {
+  const L = r.locator; if (!L || !L.kind) continue;
+  const ref = { $file: r.file, prefix: r.prefix || '', suffix: r.suffix || '', finalNewline: !!r.hadFinalNewline };
+  if (L.kind === 'entry') manifest.character_book.entries[L.index].content = ref;
+  else if (L.kind === 'regex') manifest.extensions.regex_scripts[L.index].replaceString = ref;
+  else if (L.kind === 'thscript') manifest.extensions.tavern_helper.scripts[L.index].content = ref;
+  else if (L.kind === 'variables') manifest.extensions.tavern_helper.variables = { ...ref, json: true };
+}
+fs.writeFileSync(path.join(OUT, 'manifest.json'), JSON.stringify(manifest, null, 2));
+
 // ---- Validate runtime script syntax (best-effort; report only) ----
 const jsInvalid = [];
 for (const r of records) {
