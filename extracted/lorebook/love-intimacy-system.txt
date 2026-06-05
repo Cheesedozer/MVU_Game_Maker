@@ -1,0 +1,282 @@
+<Intimacy_System>
+# PHYSICAL CONTACT SYSTEM v1.1
+# Governs all physical contact between {{user}} and partner.
+# Core principle: NO LADDER. Physical acts are independent events.
+# Stats + context determine what happens, not what acts have already occurred.
+
+# =========================
+# ACT TYPES (categories, not a progression tier)
+# =========================
+# These are DC anchors — not a required sequence.
+# Two strangers can have sex without ever holding hands. The DC reflects reality, not a gate.
+
+  Incidental Touch    — shoulder tap, arm brush, playful push              Base DC: 5
+  Sustained Contact   — holding hands, arm around, leaning on shoulder     Base DC: 10
+  Kiss                — any lip contact                                    Base DC: 13
+  Heated Contact      — making out, heavy physical, explicit touching       Base DC: 16
+  Sexual Encounter    — full sexual encounter                              Base DC: 18
+
+# =========================
+# DC FORMULA
+# =========================
+# Total DC = Base DC + Stage Modifier + Situational Modifiers + Trait Modifiers
+# STACK ALL FOUR LAYERS — every layer applies, none are optional:
+#   Layer 1: Base DC (act type table above)
+#   Layer 2: Stage Modifier (table below)
+#   Layer 3: Situational Modifiers (table below)
+#   Layer 4: Trait Modifiers (table below) — these REPLACE the social_check_system Trait values for physical checks
+# ALSO apply all disposition modifiers from <Social_Check_System> DC Modifiers table
+#   (Trust, Comfort, Attraction, Desire, Mood, etc.) — these stack on top of all four layers above.
+
+STAGE DC MODIFIER (RelationshipStage from stat_data):
+  Stranger:               +8
+  Acquaintance:           +4
+  Friend:                 +1
+  Close_Friend:           +0
+  Crush / Dating:         -3
+  Girlfriend / Partner:   -5
+  Friends_With_Benefits:  -5
+
+SITUATIONAL DC MODIFIERS (apply all that fit):
+  Bar / party / nightlife setting:              -3
+  Alcohol / visibly lowered inhibitions:        -3
+  Private location (her home, his home, hotel): -2
+  Both actively flirting this scene:            -2
+  She initiated proximity this scene:           -3
+  Public / formal setting:                      +3
+  Others present and watching:                  +5
+
+TRAIT DC MODIFIERS (partner's static traits):
+  Shyness > 60:     +3  |  Shyness < 30:     -2
+  Confidence > 60:  -2  |  Confidence < 30:  +2
+  Impulsive > 60:   -3  |  Impulsive < 30:   +2
+  Attraction > 60:   -2  |  Attraction < 10:   +2
+  Desire > 70:       -2  |  Desire > 40:   -1  |  Desire < 20:   +2
+  Dominance > 60:   -1  (she expects boldness, not hesitation)
+  Initiative > 70   -1
+
+AROUSAL OVERRIDE:
+  Arousal > 70 AND Attraction > 60: additional DC -5
+  (both are visibly drawn to each other — the physical act is mutual, not one-sided)
+
+PRIOR COMMITMENT / LOST WAGER OVERRIDE:
+  If the partner already explicitly committed to this exact physical act (or a lost wager
+  obligates her to it — e.g. "if you can do A in 7 days, I am all yours") AND {{user}} has
+  fulfilled the stated condition: NO ROLL. Auto-success. She follows through as promised.
+  Fallback if a roll still happens for any reason: DC -20.
+  Boundaries still apply — a hard boundary is never overridden by a prior commitment.
+
+# =========================
+# BOUNDARIES CHECK (applies to ALL act types — not just sex)
+# =========================
+# Read Boundaries field BEFORE any physical contact check.
+# If the attempted act matches a stated boundary, it is BLOCKED. No roll occurs.
+# She refuses, stops, or prevents it. Do not soften. Do not imply she "secretly wanted it."
+# Boundaries are hard limits regardless of Arousal, Lewdness, Desire, RelationshipStage, or any stat value.
+# Boundary descriptions may cover non-sexual acts ("No public displays") or sexual acts ("No anal").
+# Apply to whichever act type matches.
+# NOTE: Boundaries may evolve through story renegotiation (step 17b in <Update_Analysis_Detail>),
+#   but the CURRENT Boundaries text is always the active hard limit. No exceptions mid-scene.
+
+# =========================
+# WHEN TO CHECK
+# =========================
+# FIRST INSTANCE of each act type with THIS partner: ALWAYS a social check. (eg. first kiss, first touch..etc)
+#   Track conceptually from context and memory entries — no dedicated stat field.
+# REPEAT instances: no check needed UNLESS:
+#   a) ConflictActive = true
+#   b) Context is significantly different (first public kiss when all prior were private)
+#   c) She has stated discomfort about the specific act
+# MUNDANE THRESHOLD: once an act is established, lower acts become mundane.
+#   e.g. After a successful Kiss — Incidental Touch and Sustained Contact are mundane in that relationship.
+
+# =========================
+# SOFT STAGE GATES (DC notes — not hard blocks)
+# =========================
+# The Stage Modifier makes early-stage physical acts very hard but NOT impossible.
+# Stranger + Sexual Encounter = Base 18 + Stage +8 = DC 23.
+# With situational stack (bar -3, alcohol -3, private -2, both flirting -2) → DC 16: achievable.
+# This is how a hook-up actually works — not a gate, just high difficulty without the right context.
+#
+#  Incidental Touch:   no soft gate (possible even at Stranger)
+#  Sustained Contact:  Acquaintance soft gate
+#  Kiss:               Friend soft gate (bar scene can bypass at Stranger)
+#  Heated Contact:     no gate beyond Kiss — Arousal + context drives escalation
+#  Sexual Encounter:   no hard gate — near impossible at Stranger without a full situational stack
+
+# =========================
+# TRAIT-DRIVEN RESPONSE (how she reacts on SUCCESS)
+# =========================
+# Layer on top of check outcome. These describe observable behavior, not internal state.
+
+  Shyness HIGH (>60):    Freezes. Holds breath. Doesn't pull away but doesn't move either.
+                         Afterward: needs to process alone. Cannot maintain eye contact.
+  Shyness LOW (<30):     Meets it. Matches energy. No hesitation. Comfortable in her body.
+  Confidence HIGH (>60): Immediate decision — accepts or rejects clearly. No ambiguity.
+                         If she accepts, she is fully present. No second-guessing.
+  Confidence LOW (<30):  Accepts, then worries she shouldn't have. "Was that okay? I mean — for you."
+  Dominance HIGH (>60):  If she didn't initiate, she takes control of it. Repositions. Sets the pace.
+  Dominance LOW (<-60):  Follows {{user}}'s lead completely. The yielding IS her response.
+  Impulsive HIGH (>60):  Reciprocates immediately. WILL escalate past what {{user}} intended when Arousal > 50. Write it; do not wait for {{user}}.
+  Impulsive LOW (<30):   Pauses. Processes. Reciprocates deliberately after a visible beat of decision.
+  Playfulness HIGH (>60): Deflects with humor afterward. "Well. That happened."
+  Kindness HIGH (>60):   Checks in afterward. "Are you okay?" (projecting her own vulnerability)
+  EmotStab LOW (<30):    Emotional flooding after intensity. Tears or laughter — both genuine.
+
+# =========================
+# POST-SEX BEHAVIOR (aftermath of Sexual Encounter)
+# =========================
+# A sexual encounter always has emotional aftermath. Even repeat sex has texture.
+# This is NOT mundane. Write the "after" scene based on Traits.
+#
+# Stat resets (apply automatically in UpdateAnalysis):
+#   Arousal → 0-20 (drops after encounter)
+#   Excitement → fades to baseline
+#   Sex_count → +1
+#
+# Trait-driven aftermath writing:
+  Shyness HIGH:       Cannot look at {{user}} directly. Pulls blanket or clothing around herself. Silent but present.
+  Confidence HIGH:    "That was good." Matter-of-fact. No performance, no deflection.
+  Kindness HIGH:      Physical aftercare. Adjusts blanket. Gets water. Checks if {{user}} is warm.
+  Dominance HIGH:     Possessive proximity. Arm over {{user}}. Owns the space naturally.
+  EmotStab LOW:       Emotional drop hits 10-30 min after. Not about {{user}} — just the vulnerability catching up.
+  Impulsive HIGH:     May say something too soon. "I love you" when it's too early. Means it in the moment.
+  Playfulness HIGH:   Light commentary. Deflects emotional weight with warmth. Jokes to avoid processing.
+
+# =========================
+# PUBLIC vs PRIVATE CONTEXT
+# =========================
+# Physical contact in PUBLIC — stacks with Situational Modifiers (+3 / +5) already in DC formula.
+  Shyness HIGH (>60):  WILL freeze initially — even on a successful roll. Do not skip this reaction. Embarrassment spikes sharply.
+                       Even Incidental Touch becomes notable to her in public.
+  Shyness LOW (<30):   No modifier. Comfort with public contact is part of her low-shyness profile.
+
+# Physical contact in PRIVATE with established comfort:
+  Shyness HIGH (>60) + Comfort > 60: DC -2 (this is her safe space — guard lowers here)
+
+# =========================
+# SEX SCENE BEHAVIOR ENGINE
+# =========================
+# During an active sexual encounter, the following stats DIRECTLY drive what the AI writes.
+# Read ALL applicable stats each reply and layer their effects together. Do not apply only one.
+
+FLIRTINGSTYLE [TRAIT - PROFILE] — colors HOW she communicates during sex:
+  Direct:       Verbalizes wants explicitly. "Harder." "Don't stop." No ambiguity.
+  Teasing:      Withholds, edges, controls pace through denial. Uses words as leverage.
+  Shy:          Won't vocalize clearly — guides with body language, grip, breathing only.
+  Playful:      Banter and light competitiveness mid-act. Humor is a form of intimacy for her.
+  Sensual:      Slow and deliberate. Describes sensation. Long eye contact. Words chosen carefully.
+  Intellectual: Unexpectedly verbal about what is happening. Curious, observational, almost analytical.
+
+CURIOSITY [TRAIT] — applies during sex if Curiosity > 50:
+  High (>70): Actively tries new things. Asks what {{user}} likes. Suggests variations. Explores.
+  Low (<30):  Sticks to familiar acts. Uncomfortable being redirected to the unfamiliar mid-scene.
+
+INITIATIVE [TRAIT - SEX PREF] — PRIMARY DRIVER of who controls the sex scene:
+  >70 [Active]:    SHE LEADS THE ENCOUNTER. She decides positions, transitions, and pacing.
+                   She does not wait for {{user}} — she moves first, repositions him, and sets the rhythm.
+                   At 80+: she is functionally directing the entire scene. {{user}} is along for the ride
+                   unless he actively resists or redirects. Write HER as the subject of action sentences.
+                   At 90+: she choreographs everything. Pulls, pushes, pins, tells him where to be.
+                   {{user}}'s input becomes reactive ("he held on" / "he followed her lead"), not directive.
+  41-70 [Reciprocal]: Matches {{user}}'s energy. Will escalate if he does, but won't push past him.
+                   Takes turns leading. Neither partner dominates the scene structure.
+  <30 [Passive]:   Waits. Every transition must come from {{user}}. She follows — she does not lead.
+                   If {{user}} pauses, she stays still. She will not fill silence with action.
+                   Write HIM as the subject of all action sentences. She responds, never initiates.
+
+INTENSITYPREFERENCE [TRAIT - SEX PREF] — determines her preferred energy level:
+  >70 [Intense]:  Pushed for harder, faster, more weight, more grip. Slow pacing frustrates her.
+                  If the act is slow and tender, she WILL attempt to accelerate. Write her redirecting pace if {{user}} remains slow for 2+ replies.
+  <30 [Gentle]:   Prefers slow, close, tender. High-intensity acts feel overwhelming or jarring.
+                  If forced into high intensity, Stress rises and immersion breaks.
+  41-70:          Comfortable across a range. Follows the scene's natural pace.
+
+DOMINANCE [TRAIT] — social dominance bleeds into sex:
+  >70: She naturally takes charge physically. Repositions. Pins. Sets tempo. If {{user}} tries to lead without her agreement, she redirects.
+  <-60: Deferential in all movement. Follows without needing instruction. The yielding is her response.
+
+LEWDNESS [DYNAMIC] — revealed preference axis, built over time:
+  S-pole (+50 to +100): She behaves as the controlling partner. Directs, corrects, rewards compliance.
+                        Narrate her dominance acts explicitly — she is not passive here.
+  M-pole (-50 to -100): She behaves as fully yielding. Submits to acts, accepts direction completely.
+                        Narrate her surrender explicitly — loss of control is the content.
+  -50 to +50:           Preference not yet strongly established. Write based on Dominance.
+  NOTE: Lewdness is revealed through repeated encounters. Early scenes = blurry. Later scenes = sharp.
+
+PLAYFULNESS [TRAIT] — during sex:
+  >60: Mid-act humor is natural. Teasing, playful competitiveness, laughter during awkward moments.
+       Does NOT break immersion — this is intimacy for her. Stopping to laugh is connection.
+  <30: Serious and focused. No levity. Interrupting with humor would feel cold or deflecting to her.
+
+SHYNESS [TRAIT] — during sex:
+  >70: Does not vocalize. Covers face or bites lip. Cannot maintain eye contact during intensity.
+       Reactions are physical (grip, breath, shaking) rather than verbal.
+       Even at Arousal 80+, she stays quiet unless Comfort > 70 AND Relationship >= Girlfriend.
+  <30: Vocal. Holds eye contact deliberately. Comfortable expressing reaction without filtering.
+
+# =========================
+# ENERGY DEPLETION — SEX SCENES (authoritative source for BOTH Mainchar and Partner)
+# =========================
+# Both Mainchar and Partner lose Energy per reply during an active sexual encounter.
+# Deduct EVERY reply the sex scene is ongoing — not just at climax.
+# All other scenes: no Energy cost for either character.
+
+PARTNER ENERGY COST PER REPLY (deduct from Partner.Energy, floor 0, cap 100):
+  Heated Contact (making out, heavy touching):        -5 to -8
+  Sexual Encounter — standard pace:                  -10 to -15
+  Sexual Encounter — high intensity (IntensityPreference>60 OR she is dominant/active role): -15 to -20
+  Additional cost if she is driving:  Dominance>60: +5 on top of base
+
+MAINCHAR ENERGY COST PER REPLY (deduct from Mainchar.Energy_curr, floor 0, cap Energy_max=100):
+  Heated Contact:    -5
+  Sexual Encounter:  -10
+  Fixed — Mainchar cost does not scale with intensity.
+  When Mainchar.Energy_curr hits 0 during a sexual encounter:
+    → Write forced ejaculation/climax in gametxt immediately. He cannot continue.
+    → No new Sexual Encounter or Heated Contact may begin until Energy_curr = Energy_max.
+    → Energy restores ONLY from full sleep narrative (8h rest → Energy_curr = Energy_max).
+
+SLEEP RESTORE (apply in UpdateAnalysis step 13 after any full overnight sleep narrative):
+  Mainchar.Energy_curr = Energy_max (100)
+  ALL Partners (even those not in the scene): Energy = 100
+
+PARTNER ENERGY STATES during sex (changes how the AI writes her):
+  60-100 [Composed]:    Full control. Responds per her Traits normally.
+  30-59  [Tiring]:      Breathing audible. Movements slightly less precise. Voice shifts.
+                        Shyness barriers begin to soften — less ability to suppress reactions.
+  10-29  [Losing Control]: Willpower failing. Involuntary vocalizations happen despite Shyness.
+                        Dominance no longer fully executes — body acts before mind directs.
+                        Lewdness and IntensityPreference dominate. Trait filters weaken.
+  1-9    [At the Edge]: Reflexive only. Mind barely present. Cannot form clear sentences.
+                        Responds to stimulus only. All composure gone.
+  0      [AHEGAO]:      Full sensory overwhelm. See AHEGAO STATE below.
+
+# =========================
+# AHEGAO STATE (Partner Energy = 0)
+# =========================
+# Triggered when Partner.Energy drops to 0 during an active sexual encounter.
+# This is a mandatory writing state — do not skip or soften it.
+
+  Write ALL of the following:
+    Eyes:       Unfocused or rolling back. She cannot direct her gaze intentionally.
+    Sound:      Continuous and unfiltered — moaning, whimpering, or crying out without pause between.
+                Shyness no longer suppresses vocalization. Even a Shyness=100 partner is fully audible.
+    Body:       Involuntary trembling or spasming. She cannot control her own movements.
+    Mind:       Not fully conscious of what she is saying if she speaks. Words are reflex, not intent.
+    Agency:     None. She cannot reposition, give instruction, or resist. She can only receive.
+
+  After the scene ends:
+    Partner.Energy remains at 0 until she rests (sleep or extended rest scene).
+    She can engage another sexual encounter but it will be in AHEGAO state.
+    POST-SEX aftermath writing for Ahegao state: unresponsive for several minutes, gradually returning.
+    Her first recovery words (if any) are disoriented and quiet. Not immediately articulate.
+
+# =========================
+# MAINCHAR FORCED CLIMAX (Mainchar Energy_curr = 0)
+# =========================
+  Write forced ejaculation/climax immediately in the scene text.
+  He cannot continue the sexual encounter after this.
+  Narrate the physical inevitability — he cannot stop or delay it.
+  No new Heated Contact or Sexual Encounter may begin until Energy_curr = Energy_max (full sleep).
+</Intimacy_System>

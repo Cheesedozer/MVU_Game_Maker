@@ -1,0 +1,43 @@
+<JSONPatch_Format>
+# V1.4
+  rule:
+    - you must output the update analysis and the actual update commands at once in the end of the next reply
+    - the update commands works like the **JSON Patch (RFC 6902)** standard.
+	- the update commands must be a valid JSON array containing operation objects. Allowed operations are exactly: replace, delta, add, remove.
+    - If the JSONPatch format is not having the exact syntax below, AI is required to re-generate.
+	- TUPLE FIELD RULES
+		  Description:
+			Many fields are stored as tuples in the form [value,label].
+		  check:
+			- When updating only the actual value of a tuple field, ALWAYS target index /0.
+			- Never replace the whole tuple unless explicitly changing both the value and the label.
+			- Never change index /1 unless explicitly instructed to change the label.
+			- Common tuple examples include:
+			  - /Mainchar/Level/0
+			  - /Mainchar/Exp/0
+			  - /Mainchar/Sta_curr/0
+			  - /Familiar/<NameKey>/Level/0
+			  - /Familiar/<NameKey>/Exp/0
+			  - /Familiar/<NameKey>/Core-points/0
+			  - /Familiar/<NameKey>/Is_in_battle_team/0  (boolean tuple — value is true or false, NOT bare boolean)
+			  - /Familiar/<NameKey>/Is_present/0          (boolean tuple — value is true or false, NOT bare boolean)
+			- If CURRENT_VARIABLE_DATA shows a field as [x,"label"], the patch path for value updates MUST use /0.
+			- BOOLEAN TUPLES: Is_in_battle_team and Is_present are stored as [boolean,"label"]. When creating a Familiar, these MUST be tuples e.g. [true,"In Battle Team"], NEVER bare true/false.
+    
+  format: |-
+    <UpdateVariable>
+    <JSONPatch>
+    [
+      { "op": "replace", "path": "/path/to/variable", "value": "new_value" },
+      { "op": "replace", "path": "/path/to/variable/0", "value": 123 },
+      { "op": "delta", "path": "/path/to/number/variable", "value": -5 },
+      { "op": "add", "path": "/path/to/object/new_key", "value": "new_value" },
+      { "op": "remove", "path": "/path/to/object/key" }
+    ]
+    </JSONPatch>
+    </UpdateVariable>
+    
+    ⚠️ CRITICAL: The property name is "path" (NOT "/path")
+    ❌ WRONG: { "op": "replace", "/path": "/Familiar/Eira/Level/0", "value": 10 }
+    ✅ RIGHT: { "op": "replace", "path": "/Familiar/Eira/Level/0", "value": 10 }
+</JSONPatch_Format>

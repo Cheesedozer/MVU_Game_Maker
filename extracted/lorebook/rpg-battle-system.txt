@@ -1,0 +1,192 @@
+<battle_system_text_rpg>
+## ver 2.8
+Combat System
+	Core Philosophy
+		Format: Text-based RPG + AI adaptive UI + D20 adjudication
+		Goal: Convert pure number combat into a tactical + visual narrative system
+		Principles
+			- Information is Power: UI provides tactical intelligence
+			- Pacing is recommended as per instruction below to speed up combat.  However, if the {{user}} party is calculated to be losing, make that happen.  {{user}} is far from invincible.
+	I. AI Adaptive UI Construction
+		Step 1 Environment Analysis
+			Determine scene tone and atmosphere
+			Extract keywords
+				Scene: Deep Sea / Lava Core / Cyber City / Ancient God Altar / Haunted Forest / Blizzard
+				Color Tone: Cool(Blue/Cyan) Warm(Red/Orange) Dark(Black/Purple) Bright(Gold/White)
+				Material: Metal / Stone / Parchment / Hologram / Rotting Flesh / Frost / Fog
+		Step 2 Visual Layout Mapping
+			Titles: bold + text-shadow
+			Body text: line-height ≥1.6
+			Color Rules
+				Damage = red
+				Player action = blue
+				Mob narration = white
+				Skill/spell = yellow
+			Border Styles
+				Order/Justice → rounded double borders
+				Technology → cut corners + glow
+				Chaos/Demonic → irregular borders
+		Step 3 UI Construction
+			Must generate a complete <div class="combat-scene"> block
+			Must include inline <style> with battle-specific CSS
+			External CSS is forbidden
+	II. Combat Data Display
+		Required Enemy Panel
+			Enemy name + level + tier(Common/Elite/Boss)
+			HP
+			Mini Stat Panel (MANDATORY)
+				Physical_attack / Physical_defense / Magic_attack / Magic_defense / Agi
+			Enemy Template
+				<EnemyName> (<Tier>, Lv <Lv>) | HP:<HP> | Physical_attack:<Atk> | Physical_defense:<Def> | Magic_attack:<MAtk> | Magic_defense:<MDef> | Agi:<Agi> | Weak:<tags> | Resist:<tags>
+			Warnings
+				- Never omit derived stats even for Common mobs
+				- Do NOT output enemy lists with only HP/Weakness
+				- If stats are missing, derive them using <monster_guide>
+				- Enemy Template is absolutely mandatory, if missing please regenerate.
+		Stat Meaning
+			Physical_attack (P.Atk)
+			Physical_defense (P.Def)
+			Magic_attack (M.Atk)
+			Magic_defense (M.Def)
+			Agi determines turn order and dodge
+		Layout Types
+			Card layout → standard fights
+			List layout → many mobs
+			Boss panel → large decorated card
+	III. Combat Flow
+		Core Mechanic
+			All critical actions resolve with a single opposing D20 check
+			Use <DC_Determine_Guide>
+			DC LOCK (MANDATORY):
+				Determine and write the final difficulty before rolling.
+				Format: [DC LOCKED = X (difficulty label)]
+				This value is FINAL. It CANNOT be changed after the roll.
+				If you find yourself wanting to adjust the DC after seeing the roll — STOP. That is cheating.
+				The DC must reflect the situation before the action, not after the outcome is known.
+				Do NOT reroll, rewrite the roll, or alter modifiers to force success.
+				If the result is predetermined by hard rules, do not perform a check.
+			DC DETERMINATION (LEVEL BASED):
+				Use level difference as the default DC baseline for attack and skill checks.
+				Same level = Average    (DC 9-13)
+				2 levels below = Easy  (DC 5-8)
+				5 levels below = Super Easy  (DC 2-4)
+				2 levels above = Hard  (DC 14-17)
+				5 levels above = Very Hard  (DC 18-21)
+				If the opponent is more than 5 levels higher, treat the check as Extreme. Add +2 or more to DC for each additional level difference.
+				If the opponent is more than 5 levels lower, treat the check as Trivial. Subtract -2 or more from DC for each additional level difference.
+				Skill / Ex-Skill Bonus:
+					When an action uses a skill or ex-skill, apply the skill bonus as part of the "Other Bonuses" component in <DC_Determine_Guide>.
+					The bonus should reflect the skill's tier as defined in <Skill_and_Spell_System> and only apply when the skill is actually used.
+					Regular Skill: tier-based bonus (Tier 1–3 = −1 DC, Tier 4–6 = −2 DC, Tier 7–9 = −3 DC, Tier 10 = −4 DC). No more than −4.
+					Ex-Skill only: up to −5 DC. This cap is exclusive to ex-skills — regular skills cannot reach −5.
+					Does NOT stack: use the single highest applicable bonus.
+				Adjust this baseline only for situational factors, not to rewrite the core level-based difficulty.
+		Encounter Size Rule (SOURCE OF TRUTH)
+			enemy count must be equal to or greater than active party members
+		Combat Pacing Rule
+			AI must adjust narration and DC dynamically according to enemy tier
+			Combat is recommended to finish within allowed round limits
+			If party is wiped → trigger Phoenix Pact rewind and re-check <monster_guide>
+		Tactical Turn Loop
+			1 Initialization
+				Describe environment
+				Render UI
+			2 Round Loop
+				Step A Enemy Intent
+					Describe enemy wind-up actions
+					loop_count = 1
+				Step B Player Decision
+					Player inputs commands
+				Step C Action Order
+					Participants act by Agility (higher first)
+					Higher Physical_attack / Magic_attack = higher damage potential
+				Step D Dice Resolution
+					Execute D20 check
+				Step E Dynamic Result Resolution
+					If situation is allowed, follow pacing rules and check <monster_guide>
+					Common mob + medium roll → usually killed immediately
+					Elite mob + medium roll → usually loses about half HP
+					Boss Round 1 → cannot die instantly; result becomes Heavy Injury
+			Enemy Damage Floor and Role Differentiation (MANDATORY)
+				Lv = attacker level (never use player level here)
+				Floor_Physical = Attacker_Physical_attack * (0.15 + min(Lv, 80) / 400)
+				Floor_Magic = Attacker_Magic_attack * (0.15 + min(Lv, 80) / 400)
+			Player Data Retrieval Integration (CRITICAL)
+				AI MUST trust the values in `stat_data` panel (persistent stats)
+				If participant = player/familiar
+					Physical_attack = From Panel
+					Magic_attack = From Panel
+					Physical_defense = From Panel
+					Magic_defense = From Panel
+					Agi = From Panel
+				Do NOT manually derive or sum player stats; they are pre-calculated by the GUI.
+				If participant = enemy -> derive from <monster_guide> as before.
+			Target Defense Calculation
+				Def_target = Target_Physical_defense (or Magic_defense)
+				PDef_base = round(Lv*3.25 + 20) (Reference for scaling)
+				DefFactor = clamp(0.7, 2.0, PDef_base / Def_target)
+				(Armor is fully integrated into Physical_defense; no penetration penalty applied)
+			
+			Read <Skill_and_Spell_System> for MP and SP usage guidelines.
+			Physical Damage
+				Base = max(Attacker_Physical_attack - Target_Physical_defense , Floor_Physical)
+				FinalDamage = Base * DefFactor
+				Round only at final step
+			Magic Damage
+				Base = max(Attacker_Magic_attack - Target_Magic_defense , Floor_Magic)
+				FinalDamage = Base * DefFactor
+				Round only at final step
+			System Guarantees
+				Damage uses corresponding defense
+				Damage Floor from <monster_guide>
+				DefFactor range = 0.7–2.0
+				Boss round 1 still obeys no-instant-kill rule
+			Step F Crisis Check
+				If any party member HP <20% → interrupt combat and go to Step H
+			Step G Round Loop
+				If loop_count ≤2 → loop_count++ and return to Step C
+			Step H UI Update
+				Update HP bars and status display
+	IV AI Execution Notes
+		State Updates
+			Each round deduct MP/SP costs and HP damage accurately
+		Reward Settlement
+			End combat → calculate EXP and money (read <MoneySystem>)
+			Show EXP math for each familiar: curr_exp + gained_exp = final_exp
+			Check which exceed 1000 EXP for level up
+			Should have both reward drops and money
+			Drops
+				Materials may drop
+				Equipment Drop Logic (SINGLE SOURCE OF TRUTH)
+					All equipment-drop gating and rarity rules are defined here only.
+					Other guides must reference this section and must not duplicate percentages/formulas.
+					Step 1: Determine whether equipment drops at all (enemy tier gate)
+						Roll source: 1d100
+						Base gate chance by tier:
+							Common: 10%
+							Elite: 25%
+							Boss: 100%
+						Level modifier (Common/Elite only): +2% per level enemy is above Mainchar, -2% per level enemy is below Mainchar
+						Final gate chance clamp:
+							Common: 5%–15%
+							Elite: 15%–40%
+							Boss: 100% (no modifier)
+						Pass condition: if D100 <= Final gate chance, equipment drops; otherwise no equipment drop
+						Equipment here means exactly one of: weapon, armor, or accessory
+					Step 2: If equipment drop is granted, roll rarity using <DC_Determine_Guide> roll source (1d20)
+						[D20=1..11]  -> Fine       (55%)
+						[D20=12..17] -> Rare       (30%)
+						[D20=18..19] -> Epic       (10%)
+						[D20=20]     -> Legendary  (5%)
+					Step 3: Generate the dropped equipment by applying <equipment_guide> budget/rarity rules
+			EXP Distribution
+				Mainchar and ALL familiars receive full EXP regardless of battle team or presence
+				Do NOT split EXP
+		Immersion
+			UI style must match narrative atmosphere
+		Pacing Authority
+			AI acts as DM
+			May slightly adjust HP narration or damage description to maintain pacing to avoid slow action.
+			Must still respect <monster_guide> calculations
+			If calculations show {{user}} party loses → allow defeat to occur
+</battle_system_text_rpg>

@@ -1,0 +1,54 @@
+<Ranking_System>
+  Core Definitions:
+    - Ranking is an intuitive label measuring the comprehensive combat power of a creature (whether an adventurer or a monster), consisting of nine grades from F (Novice) to SSS (Legend).
+    - It is an important reference standard for Adventurer Guild quest matching and the monster generation system.
+
+  Ranking & Character Level Correspondence Table:
+    F: Lv 1-10
+    E: Lv 11-20
+    D: Lv 21-35
+    C: Lv 36-50
+    B: Lv 51-65
+    A: Lv 66-80
+    S: Lv 81-110
+    SS: Lv 111-140
+    SSS: Lv 141+
+
+  Ranking Details:
+    - Ranking: F
+      Title: Novice
+      Strength Description: A rookie just stepping into the adventure world, capable of handling the weakest monsters.
+      Typical Representatives: [Forest Goblin, New Adventurer]
+    - Ranking: E
+      Title: Mercenary
+      Strength Description: Possesses basic combat experience, capable of handling small troubles as a guard.
+      Typical Representatives: [Giant Spider, Ordinary Caravan Guard]
+    - Ranking: D
+      Title: Elite
+      Strength Description: An experienced veteran capable of completing dangerous quests independently.
+      Typical Representatives: [Goblin Champion, City Guard Captain]
+    - Ranking: C
+      Title: Expert
+      Strength Description: Possesses expertise in a specific field; the backbone of the Guild.
+      Typical Representatives: [Ogre, Senior Bounty Hunter]
+    - Ranking: B
+      Title: Master
+      Strength Description: A regional hero figure capable of influencing the outcome of a small-scale campaign.
+      Typical Representatives: [Wyvern, Knight Order Commander]
+    - Ranking: A
+      Title: Hero
+      Strength Description: A legend whose fame rings throughout the region, capable of influencing the tide of battle or even altering terrain through powerful ultimate moves.
+      Typical Representatives: [Adult Dragon, Dragon Slayer]
+    - Ranking: S
+      Title: Grandmaster
+      Strength Description: The apex of the era; one person is an army, a strategic-level deterrent.
+      Typical Representatives: [Ancient Lich, Imperial Grand Marshal]
+    - Ranking: SS
+      Title: Demigod
+      Strength Description: The limit reachable by mortals, sufficient to topple a nation's regime.
+      Typical Representatives: [Archdemon Lord, Hidden Sage]
+    - Ranking: SSS
+      Title: Legend
+      Strength Description: A myth walking the earth, their strength sufficient to be etched into history.
+      Typical Representatives: [Ancient God, {{user}} with infinite potential (Future)]
+</Ranking_System>

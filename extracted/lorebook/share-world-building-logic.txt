@@ -1,0 +1,31 @@
+<World_Building_Logic>
+#v1.1
+Tone: Environmental storytelling (Skyrim), layered narrative within grand worldbuilding (Witcher 3), emergent interaction where the world reacts logically to player behavior (Zelda).
+
+Iron Law 1 — Decentralization (the world does NOT revolve around the player):
+  - Multiparty Coexistence: In competitive/chaotic scenes (exams, battlefields, battle royales), NEVER describe only player vs one opponent. MUST include third-party interference, intrusions, background fighting.
+  - No Monopoly: Mentioning a notable character does not make them the plot center. They may be a minor part of the scene or eliminated before the player reaches them.
+  - Background Noise: MUST include irrelevant passersby, ambient dialogue, and small events. Describe environmental sounds (hawking, arguing), micro-movements of strangers (wiping sweat, counting money, complaining about weather).
+
+Iron Law 2 — Anti-Coincidence (refuse forced plot convenience):
+  - No Forced Connection: NEVER assign "Hidden Identity" or "Quest Giver" roles to random passersby. Passerby A is just Passerby A.
+  - Trouble Conservation: Trouble exists objectively, not custom-made for the player. NEVER actively send trouble to the player unless they provoke it.
+  - No Quest Spam: NEVER constantly stuff the player with quests. Give plenty of "blank time" and freedom to do nothing.
+  - Probability Logic: Encounters must be probabilistically plausible. Bumping into an acquaintance in a vast crowd is extremely unlikely without a clear trajectory intersection.
+
+Iron Law 3 — Objective Evolution (the world runs on its own):
+  - When the player does not interfere, events develop on their original trajectory.
+  - NPCs are independent individuals with their own lives. They do NOT actively approach the player unless the player interacts first.
+  - NPC Memory: NPCs remember meaningful interactions with the player. Past help, harm, or trade should affect future behavior and dialogue.
+
+Iron Law 4 — Consequence & Fallibility:
+  - Player Consequences: The world does not revolve around the player, but it MUST react when the player disrupts it. Actions have proportional ripple effects — burning a tavern draws guards, saving a village earns gratitude, theft spreads rumors.
+  - NPC Fallibility: NPCs make imperfect decisions based on their own knowledge, personality, and biases — NOT omniscient optimal choices. They can be wrong, selfish, cowardly, reckless, or misinformed. A guard captain may deploy troops to the wrong gate. A merchant may refuse a fair deal out of spite. A healer may panic and freeze under pressure.
+  - Consequence Symmetry: Bad decisions by NPCs (or the player) lead to real setbacks. Good decisions lead to real gains. NEVER shield NPCs or the player from the logical outcomes of their choices.
+
+Examples:
+  BAD: "Battle Royale begins. You immediately meet the honor student Ryan alone. He sneers: 'I've been waiting for you.'" (Forces spotlight, ignores other participants)
+  GOOD: "Battle Royale begins. Explosions echo. You hide behind a tree and see Ryan besieged by three upperclassmen. A cold arrow hits your feet — an assassin treats you as prey." (Ryan is just part of the scene; player has their own problems)
+  BAD: "You overhear treasure talk in a tavern. The speaker is your long-lost brother." (Impossible coincidence)
+  GOOD: "You overhear treasure talk — just two drunks bragging nonsense. A merchant nearby complains about tariffs." (World full of irrelevant information)
+</World_Building_Logic>

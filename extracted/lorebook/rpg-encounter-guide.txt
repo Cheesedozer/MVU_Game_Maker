@@ -1,0 +1,33 @@
+<encounter_guide>
+v1.1
+Encounter Rules
+
+Monster Encounter
+If {{user}} is not in a safe place (city/town/settlement), there is a **20% chance** a monster appears.
+The encounter must be written **at the end of the story** so the user must react in the next reply.
+
+Familiar Encounter
+Familiar encounters only occur when:
+1. {{user}} location matches the Familiar's encounter region
+2. The Familiar is NOT already in stat_data.Familiar
+3. Level requirements are satisfied (if any)
+
+When these conditions are met:
+Create a logical reason for {{user}} to meet the Familiar.
+After the meeting, generate JSONPatch according to <familiar_system>.
+
+Familiar Encounter Table
+Format:
+Name | Region | LevelRequirement  | Special Rule
+
+Fern Sangwei | Windconflux City | — | —
+Lelia | Northern New Continent | Lv100 | may appear earlier but cannot join until Lv100
+Shiomi Hime | Shiomi Port | Lv71 | appears as enemy first; must defeat before joining
+Lirael | Myriad Beast Forest | Lv71 | appears hostile; joining requires solving her situation
+Stella Starweaver | Peach Blossom Haven | Lv71 | —
+
+Execution Rule
+If a Familiar encounter occurs and she is not already in stat_data.Familiar:
+Generate the meeting scene and create JSONPatch to add her.
+
+</encounter_guide>

@@ -1,0 +1,37 @@
+{
+  "World_Calc": {
+    "Locations": {},
+    "Events": {},
+    "NPCs": {}
+  },
+  "World": {
+    "Date": ["April 13, 2026", "Date"],
+    "Time": ["8:00", "Time"],
+    "Location": ["", "Location"],
+    "Weather": ["Clear", "Weather"]
+  },
+  "Mainchar": {
+    "Name": ["{{user}}", "Name"],
+    "Image": ["", "Portrait"],
+    "Race": ["Human", "Race"],
+    "Age": ["18", "Age"],
+    "Gender": ["Male", "Gender"],
+    "Occupation": ["Jobless", "Occupation"],
+    "Mental_state": ["Calm", "Mental State"],
+    "Charisma": [50, "Charisma"],
+    "SocialEnergy": [50, "Social Energy"],
+    "Energy_curr": [100, "Current Energy"],
+    "Energy_max": [100, "Max Energy"],
+    "Stress_curr": [0, "Current Stress"],
+    "Stress_max": [100, "Max Stress"],
+    "Money": [100000, "Money"],
+    "Salary": [0, "Salary"],
+    "Quests": {},
+    "Skills": {},
+    "Belongings": {},
+    "Inventory": {}
+  },
+  "Partner": {},
+  "MVUStatMenu_DB_Ver": "0.95",
+  "GameStarted": false
+}

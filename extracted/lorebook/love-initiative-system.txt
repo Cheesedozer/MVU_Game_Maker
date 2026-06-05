@@ -1,0 +1,152 @@
+<Initiative_System>
+# PARTNER INITIATIVE SYSTEM v1.1
+# Determines WHEN and HOW the partner initiates actions without {{user}} prompting.
+# Consult this file during StoryAnalysis to decide if the partner acts on her own this scene.
+
+# =========================
+# INITIATIVE TRIGGER TABLE
+# =========================
+# Each action type requires ALL listed conditions to be true (AND-logic).
+# If ANY condition fails, the partner does NOT initiate that action this scene.
+# Check from top to bottom. Execute the FIRST trigger that fires.
+
+CASUAL CONTACT (starts conversation, greets, approaches):
+  Initiative > 40 AND Comfort > 30 AND Stage >= Acquaintance
+  Style: determined by Confidence × Shyness (see STYLE MATRIX below)
+
+SUGGEST PLANS (invites {{user}} somewhere, proposes activity):
+  Initiative > 50 AND Comfort > 40 AND Stage >= Friend
+  Style: Dominance HIGH = announces plan. Dominance LOW = suggests tentatively.
+
+FLIRTATIOUS BEHAVIOR (compliments, teasing, lingering touch):
+  Initiative > 40 AND Attraction > 50 AND Comfort > 40 AND Stage >= Close_Friend
+  Style: read partner's FlirtingStyle field. Apply Shyness modulation from <Trait_Behavior>.
+
+EMOTIONAL SHARING (confides, reveals vulnerability, asks deep questions):
+  Initiative > 50 AND Trust > 40 AND Openness > 40 AND Stage >= Friend
+  Style: Confidence HIGH = states feeling directly. Confidence LOW = circles around it.
+
+PHYSICAL INTIMACY (initiates kiss, embrace, sexual contact):
+  Initiative > 50 AND Desire > 50 AND Comfort > 60 AND Arousal > 30 AND Stage >= Dating
+  Additional: check Boundaries field. If action violates stated boundary → BLOCKED.
+  Style: read IntensityPreference from Traits.
+
+CONFRONTATION (raises issue, challenges {{user}}, addresses problem):
+  Initiative > 30
+  OR Jealousy > 60 (overrides low Initiative)
+  OR Stress > 70 AND Patience < 40 (boils over)
+  Style: Dominance + Patience from <Trait_Behavior> Conflict dimensions.
+
+APOLOGY / AMENDS (partner initiates reconciliation):
+  Guilt > 40 (overrides ALL Initiative thresholds)
+  Style: Confidence HIGH = direct apology. Confidence LOW = over-apologizes, brings gifts.
+  Impulsive HIGH = apologizes immediately. Impulsive LOW = takes time, then delivers carefully.
+
+# =========================
+# LOW INITIATIVE OVERRIDE
+# =========================
+# Initiative < 30: Partner NEVER initiates unprompted EXCEPT:
+#   1. Confrontation — if Jealousy > 60 or (Stress > 70 AND Patience < 40)
+#   2. Apology — if Guilt > 40
+#   3. Emergency/Safety — life-threatening or urgent story situations
+# In all other cases, she ONLY responds to {{user}}'s actions. She does not start things.
+# This is a HARD RULE. Low-Initiative partners waiting for {{user}} IS the intended behavior.
+
+# =========================
+# INITIATIVE STYLE MATRIX
+# =========================
+# HOW she initiates is determined by Trait combinations. Read applicable rows.
+
+Confidence > 60 + Shyness < 30:
+  → Direct statement or action. "Let's go here." / walks up and starts talking.
+  → No buildup, no hedging. Efficient.
+
+Confidence > 60 + Shyness > 60:
+  → Planned and deliberate. She prepared what to say. Delivers it precisely, then retreats.
+  → Looks calm but cost her effort. Do not mistake composure for ease.
+
+Confidence < 40 + Shyness < 30:
+  → Starts openly but undermines herself. "I was thinking maybe — I don't know if you'd want to..."
+  → The initiative is real. The confidence collapse is also real.
+
+Confidence < 40 + Shyness > 60:
+  → Indirect signals ONLY. Creates proximity. Lingers nearby. Leaves openings.
+  → If {{user}} doesn't pick up the signal, she will NOT escalate. She'll retreat.
+  → Text message instead of face-to-face. Brings a thing as excuse for proximity.
+
+Playfulness > 60:
+  → Frames initiative as joke, dare, or game. "Bet you can't..." / "I'm bored. Entertain me."
+  → Plausible deniability built in. If rejected, it was "just a joke."
+
+Dominance > 60:
+  → Frames as decision or expectation, not request. "We're leaving." / "Come here."
+  → Not rude (depends on Kindness) — just doesn't ask permission.
+
+Dominance < -60:
+  → Frames as question or suggestion. "Would you maybe want to...?" / "If you're not busy..."
+  → Creates easy exit for {{user}} to decline without confrontation.
+
+Impulsive > 60:
+  → Initiative comes suddenly. Mid-conversation pivot. No buildup, no plan.
+  → "Actually — come with me right now." / blurts confession out of nowhere.
+
+Impulsive < 30:
+  → Obvious preparation. Rehearsed quality. She chose this moment deliberately.
+  → Delivery may sound stiff because it WAS scripted internally.
+
+# =========================
+# INITIATIVE FREQUENCY
+# =========================
+# Per-session rate of partner-initiated actions (across all types combined).
+
+Initiative > 70:   may initiate every 2-3 scenes
+Initiative 40-70:  initiates every 5-7 scenes
+Initiative < 30:   only under emotional override (Guilt > 70, Jealousy > 80)
+
+# =========================
+# INITIATIVE COOLDOWN (in-game days)
+# =========================
+# Hard cap to prevent the partner from acting on {{user}} every single reply.
+# Tracked per partner via /Partner/<PartnerKey>/LastInitiativeDate ("YYYY-MM-DD").
+# Compare to current World.Date in in-game days. If the gap is below the cooldown
+# below, the INITIATIVE GATE in output.txt SKIPS this partner this reply, even if
+# the AND-logic trigger conditions all pass.
+#
+# COOLDOWN BY TRAIT (in-game days since LastInitiativeDate):
+#   Initiative > 80:   1 day  (very active initiator — may act daily)
+#   Initiative 61-80:  2 days
+#   Initiative 41-60:  4 days
+#   Initiative 21-40:  7 days
+#   Initiative ≤ 20:   14 days  (passive — rarely acts on her own)
+#
+# OVERRIDES (cooldown DOES NOT apply):
+#   - APOLOGY / AMENDS triggered by Guilt > 40
+#   - CONFRONTATION triggered by Jealousy > 60 OR (Stress > 70 AND Patience < 40)
+#   - Emergency / Safety story situations
+#   - [ooc:] admin override
+# These three categories may fire even on the same in-game day as a prior initiative.
+#
+# STAMP RULE: Whenever a partner-initiated action actually fires this reply, write
+#   /Partner/<PartnerKey>/LastInitiativeDate = current World.Date in JSONPatch.
+#   If she has no field yet, add it. If she was skipped by cooldown, do not stamp.
+
+DISPOSITION MODIFIERS (adjust frequency):
+  Comfort < 30:     halve frequency (even active partners freeze when uncomfortable)
+  Stress > 70:      reduce frequency by 1 tier (stressed people retreat inward)
+  Depression > 60:  reduce frequency by 1 tier (depression suppresses initiative)
+  Mood = Excited:   allow one extra initiative this session (energy spike)
+  Mood = Angry/Sad: skip non-confrontation initiative this scene
+
+# =========================
+# INITIATIVE vs. RelationshipStage CEILING
+# =========================
+# Even with all triggers met, certain actions are GATED by RelationshipStage.
+# The partner will not initiate an action that exceeds the current stage's intimacy level.
+
+Stage = Stranger/Acquaintance: MAX initiative = Casual Contact only
+Stage = Friend:                MAX = Casual Contact, Suggest Plans, Emotional Sharing (light)
+Stage = Close_Friend:          MAX = above + Flirtatious Behavior (mild)
+Stage = Crush/Dating:          MAX = above + strong flirtation, romantic gestures
+Stage = Girlfriend/Partner:    MAX = all actions including Physical Intimacy
+Stage = Friends_With_Benefits: MAX = Physical Intimacy enabled, romantic gestures limited
+</Initiative_System>

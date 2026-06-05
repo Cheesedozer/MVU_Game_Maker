@@ -1,0 +1,27 @@
+<Healing_System>
+## v2.1  Healing System
+
+Magic_assist Formula (internal only, never display):
+  Magic_assist = (WIS × 1.5) + (INT × 0.5) + (Level × 1.5)
+
+Healing Multiplier (applies to ALL heals):
+  Multiplier = max(Magic_assist, 80) / 80
+  - Floor at 80 ensures low-level healing has base effectiveness.
+
+Healing Skills:
+  Skill              | Target | Unlock                      | MP  | Base
+  Small Heal         | Single | Lv 1                        | 15  | 50
+  Medium Heal        | Single | Lv 10 + Any Healer Class     | 30  | 120
+  Large Medium Heal  | Single | Lv 25 + Any Healer Class     | 45  | 180
+  Group Heal         | Party  | Lv 30 + Any Healer Class     | 60  | 100
+  Group Medium Heal  | Party  | Lv 30 + Any Healer Class     | 90  | 160
+
+  Formula: Heal = Multiplier × Base
+  Group heals: each target gets full Base (NOT divided by party size). Cap applies per target.
+
+Healing Cap (mandatory):
+  Actual Heal = min(Calculated Heal, Target Missing HP)
+  HP must NEVER exceed HP_max.
+
+MP Reference: see <character_attributes_system>
+</Healing_System>

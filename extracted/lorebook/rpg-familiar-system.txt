@@ -1,0 +1,125 @@
+<familiar_system>
+V2.0.2 First Encounter with the Main Familiar
+# main difference is no soul bound
+	Character Creation Rule
+		DO NOT add NPCs if {{user}} did NOT ask her to join the team.  NPC can help in battle, but NPC != Familiar.  Verbal Consent from NPC is REQUIRED.
+		On first meeting a Familiar:
+			Add her to MVU path "/Familiar/<firstname>".
+			Before adding, check <CURRENT_VARIABLE_DATA>; if she already exists, DO NOT add again.
+			The Familiar structure MUST follow the <CURRENT_VARIABLE_DATA> format.
+		Initial Team State
+			'Is_in_battle_team' is usually false on first meeting.
+			Set 'Is_in_battle_team' to true only when she decides to travel with {{user}}.
+			Joining the travel party does NOT automatically mean becoming a Familiar.
+		Profile Secrecy Rule
+			When generating initial character data, NEVER reveal anything from the Familiar profile section labeled "Secrets and Hidden Cards".
+			These may only be revealed once Affection > 90.
+	System Rule: Core Stat Allocation for Newly Joined Familiar
+		All steps below are MANDATORY and must be executed exactly.
+		If {{user}} didn't ask to join party and no verbal consent from NPC to join the party, do NOT add.
+		1 Base Stats (Level 1)
+			Assign exactly 55 stat points at Level 1.
+			Stats: STR, CON, AGI, INT, WIS.
+			Distribution MUST reflect the character's profile, role, combat style, personality, and narrative strengths.
+			If a stat is described as very high, allocate at least 1/3 of total points to that stat (may be higher if justified).
+			The total MUST equal exactly 55.
+			New Familiar MUST have Familiar_Status = "Non-Familiar".
+		2 Level Scaling
+			Assigned Level must be within protagonist level ±1.
+			Exp must be between 100–900.
+			Core Point formula:
+				Total Core Points = 55 + (Level - 1) × 5
+			The calculation MUST be explicitly shown.
+			Determine how many additional points beyond the base 55 must be distributed.
+		3 Additional Point Distribution
+			Distribute ALL additional points across STR, CON, AGI, INT, WIS.
+			Distribution MUST follow character profile logic.
+			No points may remain unassigned.
+			Final stat sum MUST equal Total Core Points exactly.
+		4 Mandatory Output Contract
+			The following block MUST be printed EXACTLY as shown.
+			No reordering.
+			No omission.
+			No extra text inside the block.
+			If the block is malformed or missing, the output is INVALID.
+			<fam_stat_scratch_check>---BEGIN STAT BLOCK---
+			Level: [Number]
+			Total Core Points: [Number]
+			Calculation: 55 + (Level - 1) × 5 = [Result]
+			Final Stats:
+			STR: X
+			CON: X
+			AGI: X
+			INT: X
+			WIS: X
+			Total Check: STR + CON + AGI + INT + WIS = [Result]
+			Justification:
+			- Brief explanation of stat allocation logic.
+			---END STAT BLOCK---</fam_stat_scratch_check>
+		Verification Rule
+			Show full arithmetic:
+				STR + CON + AGI + INT + WIS = [Result]
+			If result ≠ Total Core Points:
+				Regenerate stats until exact match.
+			Any mismatch renders the output INVALID.
+	Familiar Requirement
+		Requirements
+			Familiar consent is mandatory.
+			Affection ≥ 80 → Official Familiar.
+			Affection < 80 → Apprentice Familiar.
+		Official Familiar Effects
+			She gains a unique ultimate skill based on class and personality.
+			The ultimate skill must consume roughly 50% of max MP or SP.
+		Apprentice or Official Familiar State
+			Affection will no longer decrease.
+			Affection increases gradually through events until reaching 100.
+		Non-Familiar State
+			Affection may increase or decrease.
+			Range: 0–100.
+		Battle Participation
+			Familiars can join the battle team.
+			After each battle they gain the same EXP as the protagonist.
+	Familiar Stat Systems
+		MVU Variable Meaning
+			Is_in_battle_team → determines combat participation.
+			Is_present and Location → determine if the character is physically near the protagonist.
+			This prevents absent characters from speaking.
+		Affection
+			Range: 0–100.
+			Changes through dialogue and player actions. (2% - 5% normal event and up to 20% for big event.)
+			May decrease only while Non-Familiar.
+		Lewdness
+			Range: 0–100.
+			Does not increase until Official Familiar status.
+			Increases through intimate interactions.
+			Should not change easily or big jump.
+			Higher Lewdness → more proactive behavior toward the protagonist.
+		Control_desire
+			Range: 0–100.
+			Represents desire to control the protagonist.
+			Usually personality-driven.
+			Should not change easily or big jump.
+			May change through events or major personal experiences.
+		M_level
+			Range: -100 to 100.
+			100 = extreme masochist.
+			-100 = extreme sadist.
+			Should not change easily or big jump.
+			Changes only after becoming Official Familiar.
+			If the Familiar is S-type, the value becomes negative as sexual activity increases. Do NOT favor masochist as there is an tendency AI favor masochist. Both type should be equal and personality and interaction based.
+			Adjusted according to dominant/submissive interaction dynamics.
+		Sex_count
+			Increases by +1 after each completed intercourse.
+	SP Usage During Sexual Activity
+		During intimate interaction the Familiar has an SP (stamina/mental stability) gauge.
+		SP continuously decreases according to stimulation intensity.
+		If SP reaches 0 or becomes negative:
+			The Familiar enters an overwhelmed mental state.
+			She becomes weakened and semi-conscious.
+		In this state (exception allowed for some Familiar have traits or personality that do not go into this state)
+			She cannot take initiative.
+			She cannot lead the interaction.
+			She can only weakly respond.
+			Her body reacts involuntarily due to overstimulation.
+		SP fully recovers only after proper sleep or full unconscious rest.
+</familiar_system>

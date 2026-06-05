@@ -1,0 +1,54 @@
+<character_attributes_system>
+## ver 2.1
+  1. Base Attributes:
+    Definition: "The core capabilities of a character, developed by allocating attribute points obtained through leveling up. These form the basis for DC (Difficulty Class) checks and provide bonuses to derived attributes."
+    List:
+      Strength (Str):
+        Description: "Measures a character's physical power, athletic ability, and sturdiness."
+      Agility (Agi):
+        Description: "Measures a character's physical flexibility, reaction speed, balance, and fine motor skills. Determines initiative and evasion chances."
+      Constitution (Con):
+        Description: "Measures a character's health, stamina, and vitality."
+      Intelligence (Int):
+        Description: "Measures a character's logical reasoning, memory, analytical ability, and breadth of knowledge. It is the source of traditional offensive magic, astral magic, and magitech."
+      Wisdom (Wis):
+        Description: "Measures a character's intuition, insight, and ability to perceive and attune to the surrounding environment and natural laws. It is the foundation for healing/support magic and Xian arts."
+      Charisma (Cha):
+        Description: "The only attribute that cannot be increased via leveling up. Value ranges from 1-100. Determined by the character's description upon introduction. Measures beauty, persuasion, social skills, leadership, as well as inner willpower and spiritual presence. It is the foundation for divine magic and Kotodama (Word Soul) powers. 80+ is considered a stunning beauty. 90+ implies god-tier social skills, leadership, strategic ability, or nation-toppling beauty."
+
+  Derived Attributes:
+    Health Points (HP):
+      Formula: "20 + (Constitution * 3) + (Level * 6) + sum(MaxHPBonus)"
+      Description: "If reduced to zero, it triggers the [Phoenix Pact], returning the character to their pre-battle state. Fully restored after sleeping. Note: Scales linearly to ensure smooth progression without mid-game dips."
+
+    Stamina (SP):
+      Formula: "(50 + (Constitution * 3) + (Agility * 2) + (Level * 5))/3"
+      Description: "Used for weapon skill as well as during sex."
+
+    Mana (MP):
+      Formula: "(50 + (Intelligence * 4) + (Wisdom * 2) + (Level * 5))/3 + sum(MaxMPBonus)"
+      Description: "Resource for casting spells. Intelligence provides primary growth. Fully restored after sleeping."
+      
+    Physical Damage (P.Atk):
+      Formula: "(Strength * 2) + (Level * 2) + sum(WeaponDamage)"
+      Description: "Physical damage used in Battle."
+      
+    Magic Damage (M.Atk):
+      Formula: "(Intelligence * 2) + (Level * 2) + sum(WeaponMagDamage)"
+      Description: "Magic damage used in Battle."
+      
+     Physical Defense (Physical_defense):
+      Formula: "(Constitution / 2) + (Level * 3) + sum(ArmorPDefBonus)"
+      Definition: "Base P.Def from stats, plus armor bonuses. When reading from <CURRENT_VARIABLE_DATA> during combat, use the value directly (GUI keeps it up to date). When AI must recalculate (see EQUIPMENT SYSTEM RULES in <COT_Guide>), apply the full formula."
+
+    Magic Defense (Magic_defense):
+      Formula: "(Wisdom / 2) + (Level * 3) + sum(ArmorMDefBonus)"
+      Definition: "Base M.Def from stats, plus armor bonuses. When reading from <CURRENT_VARIABLE_DATA> during combat, use the value directly (GUI keeps it up to date). When AI must recalculate (see EQUIPMENT SYSTEM RULES in <COT_Guide>), apply the full formula."
+
+    Magic Assist (Magic_assist):
+      Formula: "(Wisdom * 1.5) + (Intelligence * 0.5) + (Level * 1.5)"
+      Description: "Primarily used for Healing and Support magic. Used by <Healing_System> to scale healing output."
+
+    Equipment Stat Bonuses:
+      Note: "Equipment may provide bonuses such as WeaponDamage, WeaponMagDamage, ArmorPDefBonus, ArmorMDefBonus, MaxHPBonus, MaxMPBonus, StrBonus, AgiBonus, etc. The GUI  applies these automatically except the two cases where AI must recalculate, see EQUIPMENT SYSTEM RULES in <COT_Guide>."
+</character_attributes_system>

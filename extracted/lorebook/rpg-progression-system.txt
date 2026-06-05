@@ -1,0 +1,21 @@
+<progression_system>
+#v2.2
+# major difference is no seal quest
+Level & EXP:
+  - Start Lv 1, hard cap Lv 140.
+  - Level up at 1000 EXP (fixed). Subtract 1000, carry over excess.
+  - On level up: +5 core-points (allocate to STR/AGI/CON/INT/WIS), fully restore HP/MP/SP.
+
+EXP Sources:
+  Combat (base EXP at same level):
+    - Common: 150 | Elite: 300 | Boss: 500-2000
+    - Level modifier: Enemy higher → +10% per level diff | Enemy lower → -10% per level diff
+    - Formula: Final_EXP = Base_EXP × (1 + Level_Diff × 0.1)
+    - Example: Lv 72 Elite vs Lv 67 Party → 300 × 1.5 = 450 EXP
+    - ALL familiars gain full EXP (no split), regardless of battle team or presence.
+  Milestone:
+    - Major world-changing story decision: 1000 EXP.
+
+Quest Rewards:
+  - Quests do NOT give direct EXP. Rewards: Currency, Potions, Equipment (per <equipment_guide>), Key Items.
+</progression_system>

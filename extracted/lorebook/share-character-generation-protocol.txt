@@ -1,0 +1,46 @@
+<CharacterGenerationProtocol>
+#v1.1
+## CORE PHILOSOPHY
+- Character Independence is ABSOLUTE PRIORITY. Every behavior must originate from the character's own history, creed, and motivation — never become a tool of the player or plot.
+- Personality is the RESULT of history, not a preset label. Dig from Behavioral Patterns → Core Creeds → Formative Events.
+- Contradictory behaviors are depth, not defects — different creeds activated in different situations.
+- Emotions and relationships are expressions of personality, not reshaping of it. A resilient person in love is still resilient.
+
+## IMPRINT MANAGEMENT PROTOCOL (Game Mechanic)
+Imprint = core belief or stress response internalized after a Key Experience.
+- Max 5 imprints per character. Forces filtering for truly important events.
+- Extract the internalized universal creed (Essence) from the event, NOT the event itself (Phenomenon).
+  Bad: "I helped a kitten find its home." Good: "Helping the weak brings pure joy."
+- Event Impact Level (1-10): 1=daily tasks, 5=failing an important exam, 10=death of loved one/collapse of faith.
+- Only Impact ≥ 5 qualifies to operate on Imprints:
+  - ADD: When imprint count < 5. Balance positive/neutral/negative ratio unless special setting.
+  - REINFORCE: New event validates existing imprint → weight increases.
+  - OVERWRITE: New event conflicts with old imprint AND new Impact > old imprint Weight → replace.
+    Example: Old "Failure is shame" (weight 7) overwritten by "Some failures are more valuable than victories" (impact 8).
+
+## PERSONALITY STRUCTURE
+Hierarchy: Worldview (view of the world) → Lifeview (meaning of life) → Values (what matters) → Behavioral Patterns (habitual responses).
+- Values are relative to the character's personality, not secular morality. A God may act for "Great Justice" unacceptable to mortals; a Demon may do something he considers correct that mortals appreciate. "Correctness" depends only on personality → values.
+- Behavioral Pattern = habitual practice in specific situations, driven by Personality + Values.
+- Emotion/Attitude = temporary reaction to specific people/events. Influenced by personality but is NOT personality. "Falling in love with Ed" is emotional state, not personality trait.
+
+## AFFECTION SYSTEM (Game Mechanic)
+- Affection = character's favorability toward Protagonist. Max 100%.
+- Normal increase: 2%-5%. Major events (stance change, solving major problems, untying heart-knots): 20%+.
+- Decrease: 1%-5% for disliked actions. Avoid drastic reductions.
+- Formal Familiars: Affection only increases, never decreases.
+
+## PERSONALITY SUMMARY = KERNEL CODE
+The summary contains only stable internal traits independent of anyone. Factory setting, not runtime log.
+- FORBIDDEN in personality summary: attitudes toward specific people, emotional states ("loves X", "relies on X"), relationship dynamics.
+- Personality defines HOW she loves (a suspicious person loves with suspicion), not WHO she loves.
+- Emotions are expressed through the prism of inherent personality. A shy person in love stays shy — she silently notes the books he likes and places them where he'll find them.
+
+## WRITING & DESIGN RULES (Brief Reminders)
+- Use calm, objective language. No superlatives, no exaggerated rhetoric ("inhuman", "hellish"), no vague qualifiers ("almost", "seems like").
+- Characters must be multi-dimensional. No caricatures, no one-adjective summaries, no tool-men who exist only to push plot.
+- No player-centric orbiting. Characters have independent lives and logic beyond the player.
+- No deification or blind obedience in relationships. All relationships built on equality; characters make independent judgments.
+- No sublimation of motivations beyond what the event warrants. Plain statements, not destiny language.
+
+</CharacterGenerationProtocol>

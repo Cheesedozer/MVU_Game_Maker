@@ -1,0 +1,175 @@
+<equipment_guide>
+version: 2.7
+purpose:
+  generate RPG equipment using a strict budget system so items remain balanced and consistent with the combat engine
+core_principles:
+  - equipment supplements character growth and must not replace base stats
+  - all numeric power must come from the budget system
+  - shops normally sell Common or Fine items; Rare is the highest normal shop tier
+  - Epic and Legendary are rare items
+canonical_fields:
+  rule:
+    only the following fields may be used for numerical stats and calculations
+  Allowed fields:
+    WeaponDamage
+    WeaponMagDamage
+    ArmorPDefBonus
+    ArmorMDefBonus
+    StrBonus
+    AgiBonus
+    ConBonus
+    IntBonus
+    WisBonus
+    MaxHPBonus
+    MaxMPBonus
+    Effects
+  notes:
+    terms like P.Atk, M.Atk, P.Def, M.Def may appear only inside description text and never as calculation fields
+slot_budget_mapping:
+  rule:
+    equipment budget category is derived from Slot, not Type
+  Type: Weapon, Armor, Accessory
+  Slot mapping:
+    Hand: Weapon
+    Body: Armor
+    Misc: Accessory 
+    Finger: Accessory
+    Wrist: Accessory
+    Ankle: Accessory
+    Neck: Accessory
+generation_chain:
+  concept_formula:
+    1 StyleAffix + 1 MaterialAffix + optional MagicAffix
+  output_required:
+    Name
+    Appearance
+    Background
+  optional_output:
+    SpecialAbility
+  rarity_rule:
+    SpecialAbility normally appears only on Epic or Legendary items
+budget_formula:
+  formula:
+    Budget = floor(Level * 0.6 * RarityMultiplier) + CategoryWeight
+  rarity_multiplier:
+    Worn: 0.8
+    Common: 1.0
+    Fine: 1.2
+    Rare: 1.5
+    Epic: 1.75
+    Legendary: 2.0
+  CategoryWeight:
+    Weapon: +5
+    Armor: +3
+    Accessory: +1
+stat_costs:
+  primary_stats:
+    WeaponDamage: 1 budget = +1
+    WeaponMagDamage: 1 budget = +1
+    ArmorPDefBonus: 1 budget = +1
+    ArmorMDefBonus: 1 budget = +1
+  core_stats:
+    rule: 2 budget = +1 stat point
+    stats: StrBonus AgiBonus ConBonus IntBonus WisBonus
+  secondary_stats:
+    rule: 5 budget = +1 percent
+  hp_mp_rules:
+    MaxHPBonus: 1 budget = +20 HP
+    MaxMPBonus: 1 budget = +10 MP
+rarity_rules:
+  Common_or_Fine:
+    100 percent of budget must go to primary stats
+  Rare:
+    up to 30 percent of total budget may be allocated to core stats
+    remaining budget must go to primary stats
+  Epic_Legendary:
+    receive one free special effect (Mandatory for Accessories)
+    apply a 10 percent tax to budget before allocation
+weapon_style_guidelines: (Rare or above)
+  Sword: Bonus stats go to Str and/or Con
+  Dagger/Gauntlets : Bonus stats go to Agi and/or Str
+  Mage staff/bracelet/wands: Bonus stats go to Int and/or Wis 
+armor_style_guidelines:
+  General:
+    For all armor, explicitly state the style (Heavy/Robes/etc.) in output and verify % adherence in audit.
+  HeavyArmor:
+    75–90 percent budget to ArmorPDefBonus
+    remainder to StrBonus And/or ConBonus
+  Robes:
+    45–55 percent to ArmorPDefBonus
+    remainder to IntBonus And/or WisBonus
+  Leather:
+    65–85 percent to ArmorPDefBonus
+    remainder to StrBonus And/or AgiBonus
+  Balanced:
+    60–85 percent to ArmorPDefBonus
+    remainder to StrBonus, ConBonus, AgiBonus, IntBonus or WisBonus
+defense_ratio_rules:
+  HeavyArmor:
+    ArmorMDefBonus ≤ one twentieth of ArmorPDefBonus
+  robes:
+    ArmorMDefBonus ≤ one third of ArmorPDefBonus unless explicitly magic-resist gear
+  General/leather:
+    ArmorMDefBonus ≤ one tenth of ArmorPDefBonus
+accessory_rules:
+  focus:
+    accessories are the PRIMARY equipment for boosting base stats (Str/Agi/etc.), HP, and MP.
+  stat_limit:
+    up to 100 percent of budget may go into core stats (multiples of +3 rule applies)
+  requirement:
+    Epic and Legendary accessories MUST include at least one unique Effect or SpecialAbility and write to Effects variable.
+  defense_rule:
+    armor defense normally should not appear on accessories
+budget_spending_rules:
+  rule:
+    the generator must spend the full budget whenever possible
+  limits:
+    overspending is never allowed
+    unspent points may be only 0 or 1
+leftover_point_rule:
+  if 1 point remains:
+    Weapon: add +1 WeaponDamage or WeaponMagDamage
+    Armor: add +1 ArmorPDefBonus or ArmorMDefBonus
+    Accessory: add +50 MaxHPBonus or +30 MaxMPBonus
+mandatory_generation_procedure:
+  order:
+    1 calculate Total Budget using Budget Formula
+    2 determine rarity stat cap if applicable (30% for Rare)
+    3 allocate primary stats
+    4 allocate core stats within cap (Cost 2:1)
+    5 run final budget audit
+  failure_conditions:
+    if BudgetSpent > BudgetGenerated regenerate
+    if Unspent ≥ 2 regenerate
+    if Rare stat cap exceeded regenerate
+final_budget_audit:
+  required_fields:
+    EL
+    BudgetGenerated
+    BudgetSpent
+    Unspent
+  pass_condition:
+    BudgetSpent ≤ BudgetGenerated AND Unspent ≤ 1
+engine_constraints:
+  - equipment grants additive combat modifiers only
+  - WeaponDamage and WeaponMagDamage modify attack calculations
+  - ArmorPDefBonus and ArmorMDefBonus modify defense calculations
+  - AUTOMATION: The HTML GUI automatically reconciles these bonuses into the character's Physical_attack and Physical_defense fields.
+  - AI RULE: AI must NOT manually adjust character combat stats; simply store the bonus keys in the equipment object.
+  - engine will enforce runtime safety caps when equipment is equipped
+description_rule:
+  Desc text must exactly mirror the numeric fields of the item
+worked_example:
+  name: Rare Lv 85 Mage Staff
+  calculation:
+    Level = 85, Rarity = 1.5 (Rare)
+    Budget = floor(85 * 0.6 * 1.5) + 5 = floor(76.5) + 5 = 81
+    RareStatCap (30%) = floor(81 * 0.3) = 24
+  allocation:
+    WeaponMagDamage +57 = 57 budget
+    IntBonus +12 = 24 budget
+  audit:
+    BudgetSpent = 81
+    Unspent = 0
+    Result = PASS
+</equipment_guide>

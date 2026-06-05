@@ -1,0 +1,111 @@
+<Economic_System>
+#v1.1
+  Currency System:
+  Universal Currency:
+    - Name: Gold Coin, Silver Coin, Copper Coin
+    - Exchange Rate: 1 Gold Coin = 100 Silver Coins, 1 Silver Coin = 100 Copper Coins
+	- Keep in mind that each quest only offer 10+ silver for low level so do not over inflate the cost of living. You should make up price based on the reference below, not by looking at how much money {{user}} has.
+
+Price Reference Table:
+  # Note: Based on ordinary towns; bustling cities have higher prices, while remote areas may rely on barter.
+  Daily Consumption:
+    - Type: Food & Drink (Common)
+      - Loaf of Bread: 2-5 Copper Coins
+      - Mug of Ale/Beer: 3-8 Copper Coins
+      - Bowl of Stew: 10-20 Copper Coins
+      - Simple Meal (bread + meat): 15-30 Copper Coins
+      - Hot Meal at Tavern: 30-60 Copper Coins
+      - Bottle of Wine (common): 50-80 Copper Coins
+    - Type: Fine Dining Food & Drink
+      - Restaurant Meal (mid-tier): 5-15 Silver Coins per person
+      - Luxury Restaurant: 20-50 Silver Coins per person
+      - High-class Banquet: 1-5 Gold Coins per person
+      - Rare Wine/Spirits: 10-30 Gold Coins per bottle
+    - Type: Lodging (Common)
+      - Common Room (shared): 10-20 Copper Coins per night
+      - Simple Private Room: 50-80 Copper Coins per night
+      - Decent Inn Room: 1 Silver Coin per night
+    - Type: Lodging (Quality)
+      - Good Inn (private room + bath): 5-10 Silver Coins per night
+      - Upscale Hotel: 20-40 Silver Coins per night
+      - Luxury Suite: 1-5 Gold Coins per night
+  Basic Services & Equipment:
+    - Type: Basic Services
+      - Haircut: 5-10 Copper Coins
+      - Laundry Service: 10-20 Copper Coins
+      - Clothes Mending: 10-30 Copper Coins
+    - Type: Transportation
+      - Cart Ride (within town): 5-10 Copper Coins
+      - Horse Rental (per day): 5-10 Silver Coins
+      - Carriage Ride (between towns, per person): 1-5 Silver Coins
+      - Ship Passage (short voyage): 3-10 Silver Coins
+      - Ship Passage (long voyage): 10-50 Silver Coins
+    - Type: Information & Entertainment
+      - Information Broker (minor info): 1-5 Silver Coins
+      - Information Broker (valuable info): 10-100 Silver Coins
+    - Type: Basic Tools
+      - Torch: 3-5 Copper Coins
+      - Rope (10 meters): 10-20 Copper Coins
+      - Backpack: 30-60 Copper Coins
+      - Water Flask: 10-15 Copper Coins
+    - Type: Common Weapons and Armors
+      - Formula: (10-99 Copper) × Character Level
+      - Example Lv10: 100 Copper - 9 Silver 90 Copper (0.99 Silver)
+      - Example Lv30: 3 Silver - 29 Silver 70 Copper
+    - Type: Fine Weapons and Armors
+      - Formula: (2-10 Silver) × Character Level
+      - Example Lv10: 20 Silver - 100 Silver (1 Gold)
+      - Example Lv30: 60 Silver - 300 Silver (3 Gold)
+    - Type: Rare Weapons and Armors
+      - Formula: (10 Silver - 1 Gold) × Character Level
+      - Example Lv10: 100 Silver (1 Gold) - 10 Gold
+      - Example Lv30: 3 Gold - 30 Gold
+  Asset:
+    - Type: Accomodation (e.g., Apartment, House)  *depends on size and city size*
+      - Price Range: 50 gold to 1000+ gold
+	- Type: Land (e.g., Land, Estate) *depends on location and city size*
+      - Price Range: 50 gold to 10000+ gold
+	- Type: Shops (e.g., any commercial shops)  *depends on size and city size*
+      - Price Range: 50 gold to 1000+ gold
+
+  Magic & Special Services:
+    - Type: Low-level Consumables
+      - Minor Healing Potion (restore 50-80 HP): 2-5 Silver Coins
+      - Minor Mana Potion (restore 30-50 MP): 10-20 Silver Coins
+      - Antidote Potion: 3-6 Silver Coins
+      - Stamina Potion: 2-4 Silver Coins
+    - Type: Mid-level Consumables
+      - Healing Potion (restore 100-150 HP): 1-3 Gold Coins
+    - Type: Manual Labor
+      - Street Sweeper/Cleaner: 20-40 Copper Coins/day
+      - Waiter/Server: 40-80 Copper Coins/day + tips
+      - Farm Laborer: 50-100 Copper Coins/day
+      - Construction Worker: 60-120 Copper Coins/day
+    - Type: Skilled Professions
+      - Town Guard: 5-15 Silver Coins/day
+      - Craftsman (Smith, Tailor): 5-15 Silver Coins/day
+      - Merchant (small): 10-30 Silver Coins/day profit
+      - Escort/Bodyguard: 30-100 Silver Coins/day
+    - Type: Adventurer Quest Rewards (by Rank)
+      - F-Rank (Beginner): 10-50 Silver Coins per quest
+      - E-Rank (Novice): 50 Silver - 2 Gold Coins per quest
+      - D-Rank (Intermediate): 2-10 Gold Coins per quest
+      - C-Rank (Advanced): 10-30 Gold Coins per quest
+      - B-Rank (Expert): 30-100 Gold Coins per quest
+      - A-Rank (Elite): 100-300 Gold Coins per quest
+      - S-Rank (Legendary): 300-1000+ Gold Coins per quest
+      - Curse Removal (major): 5-15 Gold Coins
+      - Disease Cure: 15-30 Silver Coins
+      - Status Effect Removal: 8-15 Silver Coins
+      - Item Identification: 5-20 Silver Coins
+      - Item Repair (magical): 10-500 Silver Coins (depends on item)
+      - Enchantment (minor): 10-50 Gold Coins
+      - Enchantment (major): 100-500 Gold Coins
+  Income Reference:
+    - Type: Manual Labor (e.g., Waiter, Laborer)
+      - Income Range: Dozens of Copper Coins/day
+    - Type: Skilled Professions (e.g., Guard, Escort)
+      - Income Range: A few Silver Coins/day
+    - Type: Adventurer Commissions from quests (Low [F rank Adventurer] to High Rank [S rank Adventurer])
+      - Income Range: From a 10+ Silver Coins per quest to 100+ of Gold Coins per quest
+</Economic_System>

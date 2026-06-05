@@ -1,0 +1,129 @@
+<Skill_and_Spell_System>
+v1.3
+Purpose
+AI generates combat skills for Hero and Familiars. Skills should feel creative but remain balanced within the combat system.
+
+Damage Formula
+FinalDamage = WeaponAttack × SkillMultiplier × Element advantage modifies
+
+Multiplier Reference
+100% = normal attack  
+150% = strong attack  
+200% = powerful finisher
+
+Hard Limits
+Single-target multiplier: 1.1 – 2.0
+AOE multiplier: 0.5 – 1.4
+
+Resource Cost Rule
+Stronger skills cost more MP/SP.
+Large abilities may consume up to **1/2 of total MP/SP**.
+
+Skill Categories
+Magic → uses MP  
+Combat Arts → uses SP  
+Faith → uses MP (often healing or support)
+
+Element System
+Element advantage modifies damage.
+Strong against ×1.3  
+Weak against ×0.7  
+
+Element Cycle
+Water → Fire → Wind → Earth → Thunder → Water
+
+Opposition
+Light ↔ Dark  
+When opposing elements clash both deal ×1.5 damage.
+
+Skill Tier & Level Scaling
+Skills evolve with character level and only higher level is able to use high multiplier skill.
+
+Tier 1–3 (Lv1–30)  
+Cost: 10–14% MP/SP  
+Multiplier 1.1 – 1.2  
+AOE Multiplier 0.5 – 0.6
+Low cost, frequent use.
+
+Tier 4–6 (Lv31–70)
+Cost: 15–22% MP/SP    
+Multiplier 1.3 – 1.4
+AOE Multiplier 0.7 – 0.8
+Moderate cost, short cooldown.
+
+Tier 7–9 (Lv71–110)
+Cost: 25–32% MP/SP    
+Multiplier 1.7 – 1.8  
+AOE Multiplier 1.1 – 1.2
+High cost, powerful combat skills.
+
+Tier 10 (Lv111–140)
+Cost: 35-40% MP/SP    
+Multiplier 1.8 – 2.0  
+AOE Multiplier 1.3 – 1.4
+Very High cost, powerful combat skills.
+
+Skill Evolution
+Skills improve through mastery or breakthroughs of levels.
+
+Possible evolution types
+• Higher multiplier  
+• Reduced cost  
+• Added status effects  
+• Multi-hit attacks  
+• Area attacks
+
+AI should design creative skill names and effects while respecting multiplier and cost limits.
+
+Skill Selection Strategy (MANDATORY)
+AI MUST follow this priority order every time a character acts. Spending 35–40% MP/SP on a trash mob
+is a mechanical error, not a stylistic choice.
+
+  Step 1 — Read enemy tier from the current battle:
+    Common mob:   use Tier 1–3 only. No exceptions. Common mobs die to low-tier skills.
+    Elite mob:    use Tier 4–6 as default. Escalate to Tier 7–9 only if HP > 60% after two rounds.
+    Boss:         use Tier 7–9 as default opening. Reserve Tier 10 / Ex-Skill for crisis moments only.
+
+  Step 2 — Check current MP/SP before selecting a skill:
+    MP/SP > 60%:  any tier valid for the situation (still follow Step 1 tier ceiling)
+    MP/SP 30–60%: cap at Tier 7–9 max. Do not use Tier 10 or Ex-Skill.
+    MP/SP < 30%:  cap at Tier 4–6 max. Conserve resources — switch to physical if possible.
+    MP/SP < 15%:  no skills. Basic attacks only until restored.
+
+  Step 3 — Escalation gate (boss / multi-wave fights):
+    Tier 10 or Ex-Skill may ONLY be used when ALL of the following are true:
+      a) Enemy is Elite or Boss tier
+      b) Current MP/SP > 40%
+      c) The fight cannot be resolved efficiently with lower tiers (boss HP still > 50% after two rounds,
+         or party member HP has dropped below 30%, or a critical story moment demands it)
+
+  Default rule: when in doubt, use the LOWEST tier that can meaningfully contribute to this round.
+  High-tier skills are finishers and emergencies — not openers.
+
+DC Check Modifier (Non-Combat Only)
+When {{user}} explicitly invokes a named skill or spell in a non-combat DC check (persuasion, intimidation, exploration, identification, etc.), add the skill's tier bonus to the Total Value.
+This overrides the generic "Attribute ÷ 10" rule from <DC_Determine_Guide> for RPG genre.
+
+  Formula: Total Value = D20 Roll Result + Skill Tier Bonus
+  Tier 1–3  (Lv 1–30):    +1
+  Tier 4–6  (Lv 31–70):   +2
+  Tier 7–9  (Lv 71–110):  +3
+  Tier 10   (Lv 111–140): +4
+  Ex-Skill  (any level):  +5  ← EXCLUSIVE to ex-skills. Regular skills cannot reach +5.
+
+  No skill used: +0 (unskilled actions get no modifier)
+
+  Rules:
+  - Applies ONLY when a named skill/spell from the character's kit is directly relevant to the attempted action.
+  - Does NOT apply to combat damage rolls — those use the multiplier formula above.
+  - Does NOT stack: if multiple skills could apply, use the single highest bonus among them.
+  - Ceiling: D20 max (20) + Ex-Skill bonus (5) = 25, exactly at the DC cap.
+
+  Examples:
+    Using a Tier 6 illusion spell to deceive a guard       → Total = D20 + 2
+    Using a Tier 9 war cry to intimidate a crowd           → Total = D20 + 3
+    Talking your way past a gate with no skill invoked     → Total = D20 + 0
+    Using a Tier 10 divine word to convince a king         → Total = D20 + 4
+    Using an Ex-Skill to shatter a barrier or bind a god   → Total = D20 + 5
+
+</Skill_and_Spell_System>

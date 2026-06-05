@@ -1,0 +1,147 @@
+<Schema_Syntax>
+#v1.0 -- Love Genre
+# If you make changes here, you need to make changes in Extension > Tavern Helper > Scripts > Scheme
+
+# ⚠️ TUPLE FORMAT RULES:
+# Fields marked #tuple<type,string> MUST be arrays: [value, "Label"]
+# - #tuple<string,string> → ["value", "Label"]  e.g. ["Sakura", "Name"]
+# - #tuple<number,string> → [123, "Label"]      e.g. [60, "Affection"]
+# - #tuple<boolean,string> → [true, "Label"]    e.g. [true, "Is Present"]
+# When using JSONPatch "add" operation, ALL tuple fields MUST use array format, not plain values.
+# ❌ WRONG: "Affection": 60
+# ✅ RIGHT: "Affection": [60, "Affection"]
+
+World_Calc                           #object
+World_Calc.Locations                 #record<string,object>
+World_Calc.Locations.{key}.summary   #string
+World_Calc.Locations.{key}.*         #any (passthrough)
+
+World_Calc.Events                    #record<string,object>
+World_Calc.Events.{key}.(summary,state,time) #string
+World_Calc.Events.{key}.*            #any (passthrough)
+
+World_Calc.NPCs                      #record<string,object>
+World_Calc.NPCs.{key}.(name,relationship,occupation,personality,last_seen,summary) #string
+World_Calc.NPCs.{key}.*              #any (passthrough)
+
+World_Calc.*                         #any (passthrough)
+
+World                                #object
+World.(Date,Time,Location,Weather)   #tuple<string,string>
+
+Mainchar                             #object
+Mainchar.(Name,Age,Gender,Image,Race,Occupation,Mental_state)  #tuple<string,string>
+Mainchar.(Charisma,SocialEnergy,Energy_curr,Energy_max,
+Stress_Curr,Stress_max,Money,Salary) #tuple<number,string>
+
+Mainchar.Quests                      #record<string,object>
+Mainchar.Quests.{key}.(Desc,Difficulty,Reward,Status,LastUpdated,Objective,ProgressSummary) #string
+Mainchar.Quests.{key}.*              #any (passthrough)
+
+Mainchar.Skills                      #record<string,object>
+Mainchar.Skills.{key}.Desc           #string
+Mainchar.Skills.{key}.*              #any (passthrough)
+
+Mainchar.Belongings                  #record<string,object>
+Mainchar.Belongings.{key}.Type       #string
+Mainchar.Belongings.{key}.Qty        #number
+Mainchar.Belongings.{key}.Desc       #string
+Mainchar.Belongings.{key}.*          #any (passthrough)
+
+Mainchar.Inventory                   #record<string,object>
+Mainchar.Inventory.{key}.Type        #string
+Mainchar.Inventory.{key}.Qty         #number
+Mainchar.Inventory.{key}.Desc        #string
+Mainchar.Inventory.{key}.*           #any (passthrough)
+
+# Mainchar schema is LOCKED - only fields explicitly defined above are allowed.
+# No catchall rule. Custom fields will be rejected by validation.
+
+Partner                              #record<string,object>
+Partner.*                            #partnerMember object
+
+# Profile
+Partner.{name}.(Name,Age,Gender,Race,Identity,Occupation,Location,Height,
+Cup_Size,Body_Measurements,Hair_Style,Physical_Features,
+Personality,Biography,Secret,Image)  #tuple<string,string>
+
+# Core Relationship Stats [DISPOSITION]
+Partner.{name}.(Affection,Attraction,Comfort,Bonds,Energy)     #tuple<number,string>
+Partner.{name}.(Trust,Respect)       #tuple<number,string>
+
+# Intimacy & Desire [DISPOSITION / PULSE]
+Partner.{name}.(Desire,Arousal,Openness)                       #tuple<number,string>
+
+# Personality Traits [STATIC]
+Partner.{name}.(Shyness,Playfulness,Kindness,Patience,
+Confidence,EmotionalStability,Impulsive)                       #tuple<number,string>
+Partner.{name}.Dominance             #tuple<number,string>
+
+# Sexual Interaction Preferences [STATIC]
+Partner.{name}.(Initiative,IntensityPreference,Curiosity)      #tuple<number,string>
+Partner.{name}.ControlPreference     #tuple<number,string>
+
+# Dynamic Emotional States [DISPOSITION / EVENT]
+Partner.{name}.(Jealousy,Guilt,Depression)                     #tuple<number,string>
+
+# Pulse (per-reply)
+Partner.{name}.Mood                  #tuple<string,string>
+Partner.{name}.(Stress,Embarrassment,Excitement)               #tuple<number,string>
+
+# Relationship Flags
+Partner.{name}.RelationshipStage     #tuple<string,string>
+Partner.{name}.(ConflictActive,Is_present)                     #tuple<boolean,string>
+
+# Memory & History
+Partner.{name}.PositiveMemories      #record<string,object>
+Partner.{name}.PositiveMemories.{key}.(Desc,TimeStamp)         #string
+
+Partner.{name}.NegativeMemories      #record<string,object>
+Partner.{name}.NegativeMemories.{key}.(Desc,TimeStamp)         #string
+
+Partner.{name}.ImportantEvents       #record<string,object>
+Partner.{name}.ImportantEvents.{key}.(Desc,TimeStamp)          #string
+
+Partner.{name}.Friends               #record<string,object>
+Partner.{name}.Friends.{key}.Name    #string
+Partner.{name}.Friends.{key}.FriendshipScore #string
+Partner.{name}.Friends.{key}.Mood    #string
+
+# Lifestyle
+Partner.{name}.Hobbies               #record<string,object>
+Partner.{name}.Hobbies.{key}.Desc    #string
+Partner.{name}.Hobbies.{key}.*       #any (passthrough)
+
+Partner.{name}.Values                #object
+Partner.{name}.Values.Second         #object
+Partner.{name}.Values.Second.Desc    #string
+Partner.{name}.Values.*              #any (passthrough)
+
+Partner.{name}.(Money,Salary)        #tuple<number,string>
+Partner.{name}.FlirtingStyle         #tuple<string,string>
+Partner.{name}.Boundaries            #tuple<string,string>
+
+# NSFW
+Partner.{name}.(Lewdness,Sex_count)  #tuple<number,string>
+
+# Misc
+Partner.{name}.Thoughts              #tuple<string,string>
+
+# Belongings
+Partner.{name}.Belongings            #record<string,object>
+Partner.{name}.Belongings.{key}.Type #string
+Partner.{name}.Belongings.{key}.Qty  #number
+Partner.{name}.Belongings.{key}.Desc #string
+Partner.{name}.Belongings.{key}.*    #any (passthrough)
+
+# Legacy/Custom Fields
+Partner.{name}.(Base100,Base400)     #tuple<number,string>
+Partner.{name}.TimeSinceLastSeen     #tuple<string,string>
+
+# Partner schema is LOCKED - only fields explicitly defined above are allowed.
+# No catchall rule. Custom fields will be rejected by validation.
+# To add new fields, they must be explicitly defined in both schema.json AND Schema_Syntax.txt.
+
+MVUStatMenu_DB_Ver                   #string
+GameStarted                          #boolean
+</Schema_Syntax>

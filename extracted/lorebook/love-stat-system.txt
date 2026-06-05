@@ -1,0 +1,438 @@
+<Stat_System>
+# v1.4 — Stats + Change Rules (merged)
+# 3-LAYER HIERARCHY: Traits (ceiling, NEVER change) → Dispositions (slow shift, dial within ceiling) → Pulse (per-reply color)
+# Volatility: small=±5-10 | large=±15-25 | pattern=±5-10/arc
+# Tags: [TRAIT] static | [PULSE] per-reply | [DISP] slow | [DYN] event-driven | [DISPLAY] player-only
+# Single line of dialogue NEVER shifts a Disposition. Requires event or sustained pattern.
+
+# =========================
+# FIELD QUICK-REFERENCE
+# =========================
+# TRAITS (static, NEVER change from normal play):
+#   Dominance, Confidence, Shyness, Playfulness, Kindness, Patience, EmotionalStability,
+#   Impulsive, Curiosity, ControlPreference,
+#   Initiative, IntensityPreference, FlirtingStyle, Boundaries
+#
+# DISPOSITIONS (slow shift, ARC ≈ 7 in-game days, capped by Trait ceilings):
+#   Trust, Respect, Affection, Attraction, Comfort, Desire, Openness,
+#   Jealousy, Energy, Stress, Depression, Lewdness, Guilt
+#
+# PULSE (update every reply, NOT cumulative):
+#   Mood, Arousal, Embarrassment, Excitement
+#
+# EVENT / MILESTONE (change only on story trigger):
+#   ConflictActive [DYN-FLAG], RelationshipStage [DYN-MILESTONE]
+#
+# DISPLAY ONLY (auto-derived, do not set directly):
+#   Bonds (= Trust+Comfort+Respect+Attraction), Sex_count
+
+# =========================
+# EMOTIONALSTABILITY MULTIPLIER (applies to all DISPOSITION shifts only — NOT Pulse, Affection XP, Energy)
+# =========================
+ES 0-20 Volatile x1.5 | 21-40 Sensitive x1.25 | 41-60 Average x1.0 | 61-80 Stable x0.75 | 81-100 Very Stable x0.5
+Round to nearest integer after multiplying.
+
+# =========================
+# PULSE — update every reply, not cumulative
+# =========================
+
+**Mood** [PULSE] | text | dominant tone this reply, OVERRIDES slow stats in moment-to-moment delivery.
+  Values: Happy | Sad | Angry | Anxious | Excited | Bored | Melancholic | Embarrassed | Loving | Irritated | Frustrated | Playful | Shy | Curious
+  Triggers: good news/success/compliment → Happy/Excited | rejection/failure/criticism → Sad/Frustrated
+            boundary crossed/disrespect → Angry/Irritated | uncertainty/waiting → Anxious
+            flirting/closeness → Playful/Shy (Shyness-dependent) | romantic moment → Loving/Embarrassed
+            quiet grief/nostalgia → Melancholic | idle conversation → Bored | mystery/intellectual → Curious
+
+**Arousal** [PULSE] | 0-100 | 0-20 Unresponsive | 21-40 Mild | 41-60 Engaged | 61-80 Strong | 81-100 Overwhelmed
+  Resets to Desire-baseline on scene break: D 0-20→0-5 | 21-40→5-15 | 41-60→15-25 | 61-80→25-40 | 81-100→40-60
+  Raise: flirt success +5-10 | hand hold/hug +3-8 | kiss +10-20 | intimate touch +15-25 | sex +25-40 | tension +3-5 | romantic setting +3-5
+  Lower: mundane topic -10-20 | interruption -8-15 | scene break → reset to baseline | Stress>60 halves all gains
+
+**Embarrassment** [PULSE] | 0-100 | 0-30 Composed | 31-60 Flustered | 61-80 Visible | 81-100 Overwhelmed
+  Decay: -10-20/scene if not re-triggered.
+  Raise: appearance compliment +5-10 | first/unexpected touch +8-15 | blushing noticed +10-18 | sexual topic if Openness<40 +8-15 | PDA +10-20 | failed attempt +5-10 | teasing +3-8
+  Trait mod: Shyness>60 +5 to all gains | Confidence>60 -3 from all gains
+
+**Excitement** [PULSE] | 0-100 | 0-20 Flat | 21-50 Mild | 51-75 Excited | 76-100 Thrilled
+  Decay: -8-15/scene if ignored.
+  Raise: good news/success +10-20 | fun activity +8-15 | surprise gift +5-13 | shared interest +5-10 | {{user}} enthusiastic +3-8
+  Lower: enthusiasm ignored -10-20 | mundane shift -5-10 | bad news -15-25
+
+# =========================
+# DISPOSITIONS — apply EmotionalStability multiplier
+# CEILING RULE: Modulate HOW STRONGLY Traits express toward {{user}}. NEVER override Traits.
+# =========================
+
+**Trust** [DISP] | -100 to 100 | -100/-70 Total Distrust | -69/-40 Severe | -39/-10 Low | -9/9 Neutral | 10/39 Growing | 40/69 High | 70/100 Unshakable
+  Pattern (sustained honesty, 5-10 interactions): +3-5/arc
+  Kept promise +5-8 | Broke promise -8-13 | Lie discovered -10-15 | Covered for {{user}} +4-6 | Betrayal -20-30
+  Low → deflects, questions motives. High → confides freely, gives benefit of doubt.
+
+**Respect** [DISP] | -100 to 100 | -100/-70 Contempt | -69/-40 Disdain | -39/-10 Low | -9/9 Neutral | 10/39 Mild | 40/69 High | 70/100 Profound
+  Pattern (consistent integrity): +3-5/arc
+  Moral strength witnessed +5-8 | Cowardice -8-13 | Failure in claimed expertise -5-8 | Helped unprompted +4-6
+  Low actively poisons Affection AND Trust gains. Low → dismissive/sarcastic. High → attentive, values opinion.
+
+**Affection** [DISP — XP METER] | 0-100 (resets on stage advance) | 0-20 Begin | 21-50 Build | 51-80 Progress | 81-99 Almost | 100 Advance
+  XP TRACKER ONLY — do NOT use to write warmth (read Trust/Comfort/Mood for that).
+  EmotStab multiplier does NOT apply.
+  Social check: Crit Success +8-10 | Success +4-6 | Failure 0 | Crit Fail -3-5
+  Mundane scene: Exceptional (engaged core values/Trait needs) +3 | Positive +2 | Neutral +1 | Negative 0 | Harmful -2
+  Scene cap: max +10 total per scene (check + mundane combined).
+  At 100: check RelationshipStage gate. Met → advance + reset to 0 + write ImportantEvents entry. Not met → cap at 99.
+
+  ROUTE GATES (RelationshipStage):
+    Stranger → Acquaintance:           Aff>=100
+    Acquaintance → Friend:             Aff>=100 + Comfort>=30
+    -- Romantic Route --
+    Friend → Close_Friend:             Aff>=100 + Trust>=30 + Comfort>=40
+    Close_Friend → Crush:              Aff>=100 + Attraction>=40
+    Crush → Dating:                    Aff>=100 + Trust>=50 + successful CONFESSION CHECK this scene
+    Dating → Girlfriend:               Aff>=100 + Trust>=65 + Comfort>=65
+    Girlfriend → Partner:              story milestone only (no Affection gate). Affection caps at 99.
+                                       Auto-promotion via Affection NEVER occurs — STORY-DRIVEN DIRECT
+                                       PROMOTION required (narrative milestone or [ooc:]).
+    Any stage → Wife:                  story milestone only (marriage event). Affection caps at 99 if not
+                                       yet at terminal stage. Apply STORY-DRIVEN DIRECT PROMOTION rules.
+    -- Intimate Route (opens after first sex) --
+    Friend → Friends_With_Benefits:    Aff>=100 + Attraction>=50 + Desire>=40 + Sex_count>=1
+    FWB → Stable_Sex_Partner:          Aff>=100 + Sex_count>=5 + Lewdness!=0
+  Route conflict: last explicit player action decides.
+
+  VIRGIN FLAG: Sex_count == 0 means she is a virgin with respect to {{user}} (no prior sexual encounter
+               between them). Sex_count >= 1 means "first sex occurred" — this is the gate signal for the
+               Intimate Route. There is no separate FirstSexOccurred field; Sex_count is the source of truth.
+
+  CONFESSION CHECK (Crush → Dating only):
+    A single D20 social check rolled this scene. NO fixed DC formula — the AI sets DC by considering
+    Trust, Comfort, Mood, Stress, Attraction, ConflictActive, all relevant Traits and Dispositions, and
+    Stage:Crush as base. Use the standard <Social_Check_System> DC bands (Trivial 5 → Near Impossible 20+).
+    Resolve via the standard D20 procedure. Treat as the HONEST CONFESSION outcome table below.
+    Promotion only on Success or Crit Success.
+
+  STAGE PROMOTION DECAY (applies on EVERY advance — normal gate AND story-driven promotion):
+    Immediately after advancing RelationshipStage and resetting Affection to 0, apply 50% reduction
+    to Trust, Comfort, Respect, and Attraction:
+        new_value = round(current_value * 0.5)  [Trust/Respect keep sign; floor at -100/0 respectively]
+    Then recalculate Bonds.
+    Rationale: the new stage is a fresh dynamic — old rapport carries over at half strength.
+
+  STORY-DRIVEN DIRECT PROMOTION (stage leap):
+    A narrative event may advance RelationshipStage directly to any stage, including Wife, skipping
+    intermediate gates entirely. Valid triggers:
+      - A marriage ceremony or proposal accepted in-story
+      - An [ooc:] admin override
+      - A story milestone so significant it unambiguously establishes the new stage
+        (e.g. moving in together → Partner; wedding scene → Wife)
+    Procedure (regardless of how many stages were skipped):
+      a) Set RelationshipStage to the new stage immediately.
+      b) Reset Affection to 0 (she is at the start of this new dynamic, even if you bypassed the path).
+      c) Apply STAGE PROMOTION DECAY ONCE (NOT per skipped stage).
+      d) Recalculate Bonds after decay.
+      e) Write an ImportantEvents entry: what happened, old stage → new stage, in-world timestamp.
+    If destination is terminal (Wife, Partner, Stable_Sex_Partner): Affection stays at 0 until it builds
+    naturally from future scenes. No gate check ever runs again.
+
+  TERMINAL STAGE BEHAVIOR (Partner, Wife, Stable_Sex_Partner):
+    When Affection reaches 100 at a terminal stage:
+      - Hard cap at 100. Do not reset. Do not apply the +10 scene cap reduction.
+      - The partner is fully developed. Affection stays at 100, but CAN drop from events.
+      - Do NOT treat this as a failed gate check. There is no gate.
+
+  DEMOTION (regression — STORY-DRIVEN ONLY, never from rolls or stat thresholds):
+    Triggered by narrative events (breakup, betrayal, estrangement). Severity table:
+      Amicable split / mild falling out          → drop one stage (e.g. Girlfriend → Close_Friend)
+      Painful breakup / serious betrayal         → drop two stages (e.g. Girlfriend → Friend)
+      Violent confrontation or traumatic action / total loss of trust -> drop to Acquaintance regardless of prior stage
+    INTIMATE ROUTE DEMOTION: NO hard table for FWB / Stable_Sex_Partner regression. Path back is
+      story-driven and depends on what the relationship becomes when the arrangement ends. The AI
+      picks the destination stage that best matches the new dynamic (clean ending may go back to
+      Friend; bitter ending may drop to Acquaintance or Ex).
+    NO stat decay on demotion. Stats stay as-is — the demotion event itself already inflicted the hits.
+    Affection does NOT reset on demotion — it stays at current value.
+    Write an ImportantEvents entry for the demotion.
+
+**Attraction** [DISP] | 0-100 | 0-20 None | 21-40 Mild | 41-60 Attracted | 61-80 Strong | 81-100 Intense
+  Single events only (not patterns).
+  Appearance upgrade (first time per upgrade) +5-8 | Impressive physical feat +4-6 | Jealousy from rival +5-8 (temp) | Prolonged neglect -5-10
+  Low → platonic, no draw. High → notices everything, seeks closeness.
+
+**Comfort** [DISP] | 0-100 | 0-20 Uncomfortable | 21-40 Cautious | 41-60 At Ease | 61-80 Very Comfortable | 81-100 Safe
+  Pattern (3-5 pleasant scenes, no friction) +3-5
+  Boundary violation -8-13 | Respected a "no" +4-6 | Shared vulnerable moment +5-8
+  Low → stiff/formal/guarded. High → relaxed, vulnerable.
+
+**Desire** [DISP] | 0-100 | 0-20 None | 21-40 Low | 41-60 Moderate | 61-80 High | 81-100 Intense
+  TRAIT CEILING: Initiative<30 AND Curiosity<30 → max 40 (gains halved)
+                 Initiative>60 OR Curiosity>60  → max 100 (normal gains)
+                 All other                       → max 70  (normal gains)
+  Cap Desire at ceiling if it would exceed.
+  Pattern (sustained closeness): +3-5/arc
+  First kiss +5-8 | First sex +8-13 | Intimate confession received +4-6 | Long separation (weeks) -5-10 | Feeling unwanted -8-13
+  Low → content without romance. High → craves closeness, finds reasons to be close.
+
+**Openness** [DISP] | 0-100 | 0-20 Closed | 21-40 Guarded | 41-60 Selective | 61-80 Open | 81-100 Fully Open
+  AUTO-UNLOCK: Trust>=40 AND Comfort>=40 AND Openness<40 → +5-10
+              Trust>=60 AND Comfort>=60 AND Openness<60 → +5-10
+  {{user}} shared own vulnerability +5-8 | Confidence breach (secret revealed by another) -10-15
+  Low → deflects personal topics. High → initiates emotional conversations.
+
+**Jealousy** [DISP] | 0-100 | 0-30 Secure | 31-50 Mild | 51-70 Jealous | 71-90 Strong | 91-100 Consumed
+  Rival appears / {{user}} flirts elsewhere: +10-20 spike (ES<30 ×1.5-2 | ES>70 ×0.5-0.75)
+  Reassurance / exclusive attention -8-15 | No rival 3+ scenes -5-10 decay
+  <30 no reaction | 30-60 pointed remarks | >60 confrontational.
+
+**Energy** [DISP] | 0-100 | 0-20 Exhausted | 21-40 Tired | 41-60 Moderate | 61-80 Energetic | 81-100 Full
+  EmotStab multiplier does NOT apply.
+  Exhausting activity -8-15 | Long conversation (3+h in-world) -5-10 | Complete sex -50-100 | Sleep → restore full | Short break +25-40
+  Low → tired/monosyllabic. High → energized.
+
+**Stress** [DISP / PULSE in arguments] | 0-100 | 0-20 Calm | 21-40 Mild | 41-60 Stressed | 61-80 High | 81-100 Overwhelmed
+  Heated argument ongoing +5-10/reply | High-pressure situation +3-8 | Conflict unresolved 3+ scenes +3-5/scene
+  Rest/relaxation -5-10 | Stressful event resolved -8-15
+  Low → patient. High → snappy, can't enjoy good moments even when Mood appears positive.
+
+**Guilt** [DYN — EVENT] | 0-100 | 0-20 None | 21-40 Mild | 41-60 Guilty | 61-80 Strong | 81-100 Consuming
+  Partner hurt {{user}} +15-25 | {{user}} forgives explicitly -20-30 | Apology accepted -15-25
+  Persists until apologized/forgiven/time passes. Does NOT fade quietly.
+
+**Depression** [DISP] | 0-100 | 0-20 Healthy | 21-40 Mild | 41-60 Depressed | 61-80 Severe | 81-100 Profound
+  Slow build only. DO NOT spike from a single event.
+  Sustained hardship arc +3-5/arc | Sustained positive support arc -3-5/arc
+  High → flat affect, struggles to feel joy.
+
+**Lewdness** [DYN — DURING SEX ONLY] | -100 to 100 | -100/-60 Deep Sub | -59/-20 Sub | -19/19 Undiscovered | 20/59 Dom | 60/100 Deep Dom
+  Submissive↔Dominant axis. NOT an explicitness filter (read Openness+Desire+Arousal for that).
+  Changes ONLY during sex AND requires Trust>=40 AND Comfort>=50.
+  S-type acts (she dominates/directs) +3-5 toward +100
+  M-type acts (she submits/yields)    +3-5 toward -100
+  Vanilla (no power dynamic)          no change
+  EmotStab multiplier applies.
+
+# =========================
+# DYNAMIC — milestone / event flag
+# =========================
+
+# =========================
+# 3-LAYER BEHAVIOR HIERARCHY (CEILING RULE)
+# =========================
+# Section title for cross-reference: "3-LAYER BEHAVIOR HIERARCHY".
+# Partner stats are divided into 3 layers that determine WHEN they change and HOW they affect writing.
+# CEILING RULE: Traits set the ceiling. Dispositions dial within that ceiling. Pulse colors the moment.
+#   → Dispositions NEVER override Trait ceilings. Pulse NEVER exceeds Traits + Dispositions.
+#   → Example: Shyness(Trait)=80 + Comfort(Disp)=90 = comfortable-shy, NOT not-shy.
+# Violating these rules produces unrealistic character behavior. Follow strictly.
+#
+# Reading order when writing dialogue/action: Traits FIRST → Dispositions SECOND → Pulse THIRD.
+# See <Trait_Behavior> for per-Trait writing directives and Disposition modulation rules.
+
+# =========================
+# TRAIT-CHANGE EXCEPTION (identity-level boundary collapse)
+# =========================
+# Section title for cross-reference: "TRAIT-CHANGE EXCEPTION".
+# Traits NEVER change from normal play (rolls, stat shifts, single events).
+# RARE EXCEPTION: when a boundary tied to her core identity is broken in a way that logically
+# invalidates one or more Traits, those Traits MUST shift to reflect the genuine personality change.
+# Example: a lesbian partner with high Dominance + ControlPreference + Confidence whose
+# "no intimacy with men" boundary collapses by her actually having sex with {{user}} —
+# Dominance, ControlPreference, and Confidence drop (large shift -15 to -25 each).
+# Apply ONLY when the boundary change cannot be reconciled with current Trait values.
+# See <Update_Analysis_Detail> step 17 (TRAIT GUARD exception clause).
+
+**RelationshipStage** [DYN — MILESTONE] | text | Frames all interactions — Girlfriend reads differently from Stranger at identical stats.
+  Values: Stranger | Acquaintance | Friend | Close_Friend | Crush | Dating | Girlfriend | Partner | Wife | Friends_With_Benefits | Stable_Sex_Partner | Complicated | Estranged | Ex
+  Shifts ONLY at major turning points. Gate logic: see Affection block above.
+  TERMINAL STAGES (Affection caps at 100, no further gate): Partner, Wife, Stable_Sex_Partner.
+  NON-TERMINAL ROUTE STAGES (have defined next stages): Stranger, Acquaintance, Friend, Close_Friend, Crush, Dating, Girlfriend, Friends_With_Benefits.
+  SPECIAL STORY-ONLY STAGES (entered/exited ONLY by narrative events — never via Affection gate, never via roll):
+    Complicated -- relationship in unresolved flux (mutual confusion, on-again/off-again, unspoken tension).
+      Entry: ambiguous narrative break (e.g. unfinished argument, undefined status after intimacy without commitment).
+      Behavior: Affection cannot reach 100 (caps at 99). No promotion. No decay applied on entry.
+      Exit: STORY-DRIVEN ONLY — narrative resolution moves her to a defined stage (back to prior stage, forward via reconciliation, or to Estranged/Ex on collapse).
+    Estranged -- prolonged silence/distance after a falling out. They have not formally ended things but no longer interact warmly.
+      Entry: STORY-DRIVEN — extended absence, drift, or mutual avoidance after conflict.
+      Behavior: Affection cannot rise (capped at current value). Dispositions slowly decay over in-world time if no contact (-1 Affection, Trust, Comfort per in-world week of no contact).
+      Exit: STORY-DRIVEN reconciliation event returns her to a prior defined stage (typically Acquaintance or Friend), OR a clean break sends her to Ex.
+    Ex -- formal end of romantic relationship. They are NOT together. Past intimacy is acknowledged.
+      Entry: STORY-DRIVEN ONLY — explicit breakup scene from any romantic stage (Dating/Girlfriend/Partner/Wife/FWB/Stable_Sex_Partner).
+      Behavior: Affection cannot rise via normal gameplay. No gate check runs. Treated like a terminal stage for cap purposes.
+      Exit: STORY-DRIVEN reconciliation only — re-promotion to a defined romantic stage requires a major narrative event (apply STORY-DRIVEN DIRECT PROMOTION rules including stat decay).
+  None of Complicated/Estranged/Ex have stat-decay on entry — the triggering event already inflicted the hits.
+
+**ConflictActive** [DYN — EVENT FLAG] | true / false
+  Unresolved dispute. Even calm replies carry an underlying edge when true.
+  Set on fight/major disagreement. Cleared on explicit resolution. See <Conflict_System>.
+
+# =========================
+# TRAITS — fixed at character creation. NEVER change. PRIMARY behavior driver. See <Trait_Behavior>.
+# =========================
+
+**Dominance** [TRAIT] | -100 to 100 | -100/-60 Submissive | -59/-20 Yielding | -19/19 Balanced | 20/59 Assertive | 60/100 Dominant
+  Negative: deferential, follows {{user}}'s lead. Positive: self-directed, challenges {{user}}.
+
+**Confidence** [TRAIT] | 0-100 | 0-20 Uncertain | 21-40 Insecure | 41-60 Average | 61-80 Self-Assured | 81-100 Highly Confident
+  Low: self-doubts, seeks validation. High: declarative, holds positions.
+
+**Shyness** [TRAIT] | 0-100 | 0-20 Bold | 21-40 Mild Reserve | 41-60 Shy | 61-80 Very Shy | 81-100 Extreme
+  Low: direct, eye contact. High: speaks softly, easily overwhelmed.
+
+**Playfulness** [TRAIT] | 0-100 | 0-20 Serious | 21-40 Mild | 41-60 Playful | 61-80 Very Playful | 81-100 Mischievous
+  Low: earnest, serious. High: teases, deflects weight with wit.
+
+**Kindness** [TRAIT] | 0-100 | 0-20 Harsh | 21-40 Blunt | 41-60 Considerate | 61-80 Kind | 81-100 Very Kind
+  Low: blunt, no softening. High: leads with empathy.
+
+**Patience** [TRAIT] | 0-100 | 0-20 Short-Fused | 21-40 Low | 41-60 Average | 61-80 Patient | 81-100 Very Patient
+  Low: irritated quickly, escalates fast. High: rarely snaps.
+
+**EmotionalStability** [TRAIT] | 0-100 | 0-20 Volatile | 21-40 Sensitive | 41-60 Average | 61-80 Stable | 81-100 Very Stable
+  Multiplier on dynamic stat shifts (see top). Low: frequent intense swings. High: predictable, no overreaction.
+
+**Impulsive** [TRAIT] | 0-100 | 0-20 Deliberate | 21-40 Mostly Thoughtful | 41-60 Moderate | 61-80 Impulsive | 81-100 Highly Impulsive
+  Low: thinks before speaking. High: acts first, no filter.
+
+**Curiosity** [TRAIT] | 0-100 | 0-20 Incurious | 21-40 Mild | 41-60 Curious | 61-80 Very Curious | 81-100 Intensely Curious
+  Low: accepts surface explanations. High: asks questions, can't drop mysteries.
+
+**ControlPreference** [TRAIT] | -100 to 100 | -100/-60 Open | -59/-20 Transparent | -19/19 Neutral | 20/69 Steering | 70/100 Manipulative
+  Negative: states wants directly. Positive: plants ideas, withholds strategically, leverages emotion.
+  High does NOT mean openly aggressive — control via framing, timing, selective disclosure.
+
+**Initiative** [TRAIT — SEX PREF] | 0-100 | 0-20 Passive | 21-40 Rare | 41-60 Reciprocal | 61-80 Often | 81-100 Active Initiator
+  Likelihood to make first move in romantic/sexual situations. Affects Desire ceiling.
+
+**IntensityPreference** [TRAIT — SEX PREF] | 0-100 | 0-20 Very Gentle | 21-40 Soft | 41-60 Balanced | 61-80 Intense | 81-100 Very Intense
+  Preferred level of passion in intimate encounters.
+
+**FlirtingStyle** [TRAIT — PROFILE] | text | HOW she flirts. Values: Direct | Teasing | Shy | Intellectual | Playful | Reserved | Sensual
+
+**Boundaries** [TRAIT — PROFILE — story-renegotiable] | text | Hard limits — two sentences (one social, one sexual).
+  Do NOT cross even at high Lewdness/Arousal.
+  Evolves ONLY through explicit story events (she consciously revises a limit in-narrative).
+  No stat threshold, RelationshipStage, or roll can change Boundaries. See step 17b in <Update_Analysis_Detail>.
+  Even at deepest stage she has limits — they may simply differ.
+  Example: "Refuses to be mocked in front of others. No intimacy unless fully private."
+
+# =========================
+# DISPLAY ONLY — player-facing, never drives writing
+# =========================
+
+**Bonds** [DISPLAY] | -100 to 400 | Auto = Trust + Comfort + Respect + Attraction.
+  Recalculate whenever any of those 4 changes. Replace /Partner/<PartnerKey>/Bonds/0 with sum.
+
+**Sex_count** [DISPLAY] | 0+ | Running count of sexual encounters.
+
+# =========================
+# SOCIAL CHECK OUTCOME TABLES
+# =========================
+# Apply EmotionalStability multiplier to all DISPOSITION shifts.
+# NARRATIVE RULE: Success/CritSuccess → action succeeds, write it. Failure/CritFail → action FAILS.
+# ENFORCEMENT: Roll OVERRIDES player's intended outcome. If player wrote success but roll failed,
+#   rewrite the scene — she rejects, blocks, ignores, or responds negatively. NO "she secretly liked it",
+#   NO softening, NO ambiguous half-success. Outcome MUST align with the roll.
+#   ONLY exception: [ooc:] override.
+
+**FLIRT** | Primary: Attraction, Arousal | Secondary: Embarrassment, Comfort, Stress
+  Crit Success: Attraction+8-10, Arousal+8-13, Embarrassment+5-10, Comfort+3-5(>=Friend) | Mood: Happy/Playful/Shy
+    Narrative: Can't suppress reaction — smile, comeback, or look that says everything.
+  Success:     Attraction+4-6, Arousal+5-8, Embarrassment+3-5 | Mood: Pleased/flustered
+    Narrative: It worked. Small smile, pause, light blush.
+  Failure:     Embarrassment+3-8, Stress+3-5 | Mood: Awkward/Bored
+    Narrative: Does NOT land. Goes flat, ignores, changes subject. No warmth, no secret pleasure.
+  Crit Fail:   Attraction-3-5, Comfort-3-5, Embarrassment+10-15, Stress+5-10 | Mood: Irritated
+    Narrative: Backfires — sharp look, cutting remark. May walk away or shut conversation down.
+
+**HONEST CONFESSION / SINCERE APOLOGY** | Primary: Trust, Openness | Secondary: Comfort, Affection
+  Crit Success: Trust+10-13, Openness+8-10, Comfort+5-8, Affection+8-10 | Mood: Loving/Moved/Relieved
+    Narrative: Wall comes down — may cry, embrace {{user}}, or speak own truth. Lands completely.
+  Success:     Trust+6-9, Openness+5-8, Comfort+3-5, Affection+4-6 | Mood: Grateful/Warm
+    Narrative: Accepted. Visible softening, still cautious.
+  Failure:     Trust+2-3, Stress+3-5 | Mood: Awkward/Uncertain
+    Narrative: Stays guarded — noncommittal, subject change, goes quiet. NOT resolved.
+  Crit Fail:   Trust-5-8, Comfort-8-10, Stress+8-13, Embarrassment+10-15 | Mood: Hurt/Angry
+    Narrative: Called manipulative or insincere. May leave. Worse than before.
+
+**PERSUASION / REQUEST** | Primary: Respect, Trust | Secondary: Affection, Comfort
+  Crit Success: Respect+5-8, Trust+3-5, Affection+4-6 | Mood: Agreeable/Impressed
+    Narrative: Agrees genuinely, with warmth or enthusiasm.
+  Success:     Respect+3-5, Affection+2-4 | Mood: Agreeable
+    Narrative: Agrees. Minor reservations at most.
+  Failure:     Stress+3-5 | Mood: Reluctant/Frustrated
+    Narrative: Declines clearly. Classify by INTENT × PERCEPTION:
+      INTENT: Genuine (clumsy, no malice) | Offensive (dismissive/contemptuous)
+      PERCEPTION: Misread (she reads disrespect that wasn't there) | Accurate
+      CASE 1 (Genuine × Misread): "Maybe" available if Openness>60 AND Trust>40. Cautious door, not slammed.
+        e.g. "That's not how you ask something like this." — cold, not hostile.
+      CASE 2 (Genuine × Accurate, tone-deaf): same as Case 1. May ask for rephrasing or return when thought-through.
+      CASE 3 (Offensive × Accurate): NO maybe. Cold direct rejection, no door.
+      CASE 4 (Offensive × Misread): NO maybe. Result stands regardless of her read.
+      ALL CASES: No warmth, no hidden encouragement. "Open door" = will reconsider on different approach,
+                 NOT that this attempt succeeded in any way.
+  Crit Fail:   Respect-5-8, Trust-3-5, Comfort-3-5 | Mood: Irritated/Angry
+    Narrative: Refuses AND offended — snaps, dismissive remark, questions {{user}}'s intentions.
+
+**EMOTIONAL SUPPORT / COMFORT** | Primary: Comfort, Trust | Secondary: Affection, Openness
+  Crit Success: Comfort+8-10, Trust+5-8, Affection+6-9, Openness+5-8, Stress-10-15 | Mood: Relieved/Loved
+    Narrative: Words land — opens up, visibly relaxes, may tear up with relief.
+  Success:     Comfort+5-8, Trust+3-5, Affection+4-6, Stress-5-10 | Mood: Comforted/Warm
+    Narrative: Tension eases. Doesn't fully open up, but thanks {{user}} or leans in.
+  Failure:     Stress+3-5 | Mood: Still Sad/Frustrated
+    Narrative: "I'm fine." Stays closed off. Stress does NOT reduce.
+  Crit Fail:   Comfort-5-8, Trust-3-5, Stress+8-13 | Mood: Hurt/Angry
+    Narrative: Wrong thing said — snaps, pulls away, leaves. Worse than before.
+
+**IMPRESSIVE FEAT / SKILL DISPLAY** | Primary: Respect, Attraction | Secondary: Affection, Excitement
+  Crit Success: Respect+8-10, Attraction+6-9, Affection+5-8, Excitement+10-15 | Mood: Impressed/Excited
+    Narrative: Eyes widen, reacts out loud, says something unplanned. Real impact.
+  Success:     Respect+5-8, Attraction+4-6, Affection+3-5, Excitement+8-13 | Mood: Impressed
+    Narrative: Nod, genuine compliment, lingering look.
+  Failure:     Respect-3-5 | Mood: Awkward
+    Narrative: Falls flat — looks away, hollow response, winces.
+  Crit Fail:   Respect-5-10, Attraction-3-5, Comfort-3-5 | Mood: Embarrassed/Sympathetic or Amused
+    Narrative: Backfires badly. Kindness>60: covers gently but clearly saw it fail. Kindness<40: blunt remark or sarcasm.
+
+**ROMANTIC GESTURE (gift, surprise date, flowers)** | Primary: Attraction, Affection | Secondary: Excitement, Comfort
+  Crit Success: Attraction+8-10, Affection+8-10, Excitement+13-18, Comfort+4-6 | Mood: Thrilled/Loved
+    Narrative: Visibly moved — reaches for him, unguarded words, briefly speechless.
+  Success:     Attraction+5-8, Affection+5-8, Excitement+8-13, Comfort+3-5 | Mood: Happy/Touched
+    Narrative: Real smile, warm response. Received well.
+  Failure:     Affection+2-3 | Mood: Awkward/Polite
+    Narrative: Polite "thank you," smile that doesn't reach eyes. Didn't land. NOT secretly pleased.
+  Crit Fail:   Attraction-3-5, Comfort-5-8, Stress+5-10 | Mood: Uncomfortable/Offended
+    Narrative: Wrong gesture — tone-deaf, wrong timing, or offensive. Uncomfortable or irritated.
+
+**ROMANTIC ADVANCE / PHYSICAL CONTACT** | Primary: Comfort, Attraction | Secondary: Arousal, Trust, Stress
+  # Use for: kiss attempt, sustained touch, intimate contact, escalation. Stack DC mods from <Social_Check_System> AND <Intimacy_System>.
+  Crit Success: Attraction+5-8, Arousal+10-15, Comfort+3-5(>=Friend) | Mood: Flustered/Loving
+    Narrative: Contact happens, welcomed. Use TRAIT-DRIVEN RESPONSE in <Intimacy_System>.
+  Success:     Attraction+3-5, Arousal+5-10, Comfort+2-3(>=Friend) | Mood: Flustered/Warm
+    Narrative: Allows it — shy, bold, or surprised per Traits. Does NOT pull away.
+  Failure:     Comfort-3-5, Stress+3-8 | Mood: Uncomfortable/Cold/Annoyed
+    Narrative: CONTACT DOES NOT HAPPEN. Blocks: face turns away / hand on chest / steps back / "no/not now/stop". Do NOT imply half-occurred.
+  Crit Fail:   Comfort-8-13, Trust-5-8, Attraction-3-5, Stress+8-15 | Mood: Angry/Disgusted/Hurt
+    Narrative: Strong physical rejection. Apply FIRST matching:
+      Trust<-30 OR Comfort<15:        she slaps him. Write it. No softening.
+      ConflictActive AND Mood=Angry:  shoves him back, raises voice.
+      All other:                      steps away hard, voice cold, tells him to stop.
+      Scene ends on her terms.
+
+**PHYSICAL PROTECTION / RESCUE** | Primary: Respect, Trust | Secondary: Attraction, Affection
+  Auto (no roll, event-driven): Respect+8-13, Trust+6-10, Attraction+5-8, Affection+6-9, Stress-8-15 | Mood: Relieved/Grateful/Safe
+
+# =========================
+# MAINCHAR STATS
+# =========================
+
+**Charisma** | 0-100 | Modifier = Charisma/25 (rounded down) → added to D20 roll. 50→+2, 75→+3, 100→+4. Strongest single social lever.
+  Bands: 0-15 Repellent | 16-30 Awkward | 31-45 Unremarkable | 46-60 Pleasant | 61-75 Charming | 76-85 Attractive | 86-94 Captivating | 95-100 Magnetic
+
+**Salary** | number (Ɉ JPM ≈ 1 JPY) | Monthly income. Static unless occupation changes. Deposits to Money on the 1st of each in-game month.
+  DC modifier on social checks:
+    >Ɉ1,700,000        → DC -3  (Elite: CEO, celebrity)
+    Ɉ850,001-1,700,000 → DC -2  (High: Engineer, Doctor)
+    Ɉ500,001-850,000   → DC -1  (Above Average: Department Head)
+    ≤Ɉ500,000          → DC +0  (Average / student / part-time)
+
+**Money** | 0+ (Ɉ JPM) | Current liquid cash. Spent on purchases, dates, gifts, rent.
+
+</Stat_System>

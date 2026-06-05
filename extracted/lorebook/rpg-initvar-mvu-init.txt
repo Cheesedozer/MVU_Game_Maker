@@ -1,0 +1,163 @@
+{
+  "World_Calc": {
+    "Factions": {},
+    "Locations": {},
+    "Ruins": {},
+    "Events": {}
+  },
+  "World": {
+    "Date": [
+      "July 7, 1577",
+      "Date"
+    ],
+    "Time": [
+      "8:00",
+      "Time"
+    ],
+    "Location": [
+      "Abandoned Shack Outside Bluewatch Village",
+      "Location"
+    ],
+    "Weather": [
+      "Clear",
+      "Weather"
+    ]
+  },
+  "Mainchar": {
+    "Name": [
+      "{{user}}",
+      "Name"
+    ],
+    "Image": [
+      "",
+      "Portrait"
+    ],
+    "Race": [
+      "Human",
+      "Race"
+    ],
+    "Age": [
+      "18",
+      "Age"
+    ],
+    "Gender": [
+      "Male",
+      "Gender"
+    ],
+    "Occupation": [
+      "Spellsword",
+      "Occupation"
+    ],
+    "Level": [
+      1,
+      "Level"
+    ],
+    "Exp": [
+      0,
+      "Experience"
+    ],
+    "Core-points": [
+      0,
+      "Unassigned Points"
+    ],
+    "Mental_state": [
+      "Calm",
+      "Mental State"
+    ],
+    "Strength": [
+      15,
+      "Strength"
+    ],
+    "Agility": [
+      10,
+      "Agility"
+    ],
+    "Constitution": [
+      15,
+      "Constitution"
+    ],
+    "Intelligence": [
+      10,
+      "Intelligence"
+    ],
+    "Wisdom": [
+      5,
+      "Wisdom"
+    ],
+    "Charisma": [
+      80,
+      "Charisma"
+    ],
+    "Hp_curr": [
+      71,
+      "Current HP"
+    ],
+    "Hp_max": [
+      71,
+      "Max HP"
+    ],
+    "Mp_curr": [
+      35,
+      "Current MP"
+    ],
+    "Mp_max": [
+      35,
+      "Max MP"
+    ],
+    "Sta_curr": [
+      40,
+      "Current Stamina"
+    ],
+    "Sta_max": [
+      40,
+      "Max Stamina"
+    ],
+    "Physical_attack": [
+      32,
+      "Physical Attack"
+    ],
+    "Physical_defense": [
+      10,
+      "Physical Defense"
+    ],
+    "Magic_attack": [
+      22,
+      "Magic Attack"
+    ],
+    "Magic_defense": [
+      5,
+      "Magic Defense"
+    ],
+    "Magic_assist": [
+      14,
+      "Magic Support"
+    ],
+    "Quests": {},
+    "Skills": {},
+    "Equipment": {},
+    "Inventory": {
+      "Beginner Sword": {
+        "Type": "Weapon",
+        "Qty": 1,
+        "Rarity": "Common",
+        "Slot": "Hand",
+        "WeaponDamage": 5,
+        "Desc": "Lv 1. Common. +5 Physical Damage. Beginner Sword"
+      },
+      "Basic Healing Potion": {
+        "Type": "Potions",
+        "Qty": 3,
+        "Desc": "Basic Healing Potion"
+      }
+    },
+    "Talents": {},
+      "Real_estate": {},
+    "Buffs": {},
+    "Ailments": {}
+  },
+  "Familiar": {
+    
+  },
+  "MVUStatMenu_DB_Ver": "0.92",
+  "GameStarted": false
+}

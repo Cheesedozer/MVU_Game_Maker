@@ -1,0 +1,155 @@
+<Economic_System>
+#v2.0
+  Currency System:
+    - Name: Japon Mark (JPM), symbol: Ɉ
+    - Denominations:
+      - Coins: Ɉ1, Ɉ5, Ɉ10, Ɉ50, Ɉ100, Ɉ500
+      - Bills: Ɉ1,000, Ɉ5,000, Ɉ10,000
+    - Make up prices based on the reference table below. Do not inflate or deflate prices based on how much money {{user}} has.
+
+  Monthly Income & Social DC Modifier:
+    # Income is static and changes only when occupation changes. Deposited into Money on the 1st of each in-game month.
+    - >Ɉ1,700,000        → DC -3  (Elite: CEO, top executive, A-list celebrity)
+    - Ɉ850,001-1,700,000 → DC -2  (High: Specialist physician, senior engineer, lawyer)
+    - Ɉ500,001-850,000   → DC -1  (Above Average: Department head, mid-career professional)
+    - Ɉ250,001-500,000   → DC +0  (Average: Section chief, office worker)
+    - ≤Ɉ250,000          → DC +0  (Low: Student, part-time worker, new hire)
+
+Price Reference Table:
+  # Note: Prices reflect a modern Japanese city (e.g., Tokyo). Smaller towns may be 10-20% cheaper.
+
+  Food & Drink:
+    - Type: Casual / Everyday
+      - Onigiri (rice ball, convenience store): Ɉ120-180
+      - Bread roll / pastry: Ɉ150-250
+      - Vending machine drink (water, tea, juice): Ɉ130-160
+      - Vending machine canned coffee: Ɉ120-150
+      - Cup noodles: Ɉ200-350
+      - Convenience store bento (lunch box): Ɉ450-750
+      - Fast food combo meal (burger chain, gyudon): Ɉ500-900
+      - Ramen / udon / soba at a shop: Ɉ800-1,200
+      - Sushi (conveyor belt, per plate): Ɉ110-330
+      - Lunch set at a casual restaurant: Ɉ800-1,500
+      - Café coffee (drip / latte): Ɉ400-700
+    - Type: Casual Dining (dinner)
+      - Izakaya (per person, food + drinks): Ɉ2,500-5,000
+      - Family restaurant dinner: Ɉ1,200-2,500 per person
+      - Sushi restaurant (mid-tier, omakase): Ɉ3,000-8,000 per person
+    - Type: Fine Dining
+      - Upscale restaurant: Ɉ8,000-20,000 per person
+      - High-end kaiseki / French course: Ɉ20,000-50,000 per person
+      - Bottle of domestic sake / wine (restaurant): Ɉ3,000-10,000
+      - Bottle of premium whisky / champagne: Ɉ15,000-80,000
+
+  Groceries (per item / pack):
+    - Rice (5 kg bag): Ɉ1,500-2,500
+    - Eggs (10 pack): Ɉ200-350
+    - Milk (1 L): Ɉ180-250
+    - Chicken breast (per 100 g): Ɉ60-100
+    - Beef (domestic, per 100 g): Ɉ300-800
+    - Seasonal vegetables (per bag): Ɉ100-300
+    - Weekly groceries for one person: Ɉ3,000-6,000
+
+  Lodging:
+    - Type: Budget
+      - Capsule hotel (per night): Ɉ2,500-4,500
+      - Business hotel (single room, per night): Ɉ5,000-9,000
+    - Type: Mid-range
+      - Standard hotel (per night): Ɉ9,000-20,000
+      - Airbnb / guesthouse (per night): Ɉ6,000-15,000
+    - Type: Upscale
+      - City hotel / upscale hotel (per night): Ɉ20,000-50,000
+      - Luxury suite (per night): Ɉ50,000-200,000+
+
+  Rent (Monthly):
+    - Type: Major City
+      - Studio apartment (1K, ~20 m²): Ɉ60,000-100,000/month
+      - 1-bedroom (1LDK, ~35 m²): Ɉ90,000-150,000/month
+      - 2-bedroom (2LDK, ~55 m²): Ɉ130,000-220,000/month
+      - House (suburban Tokyo): Ɉ150,000-350,000/month
+    - Type: Regional City 
+      - Studio: Ɉ40,000-70,000/month
+      - 1-bedroom: Ɉ55,000-100,000/month
+    - Type: Rural Area
+      - Studio: Ɉ20,000-40,000/month
+
+  Utilities (Monthly):
+    - Electricity: Ɉ5,000-15,000
+    - Gas: Ɉ2,000-6,000
+    - Water: Ɉ1,500-4,000
+    - Internet (fiber, home): Ɉ4,000-6,000
+    - Mobile phone plan: Ɉ2,000-10,000
+
+  Transportation:
+    - Type: Public Transit
+      - Single train / subway ride: Ɉ170-350
+      - Bus (city): Ɉ200-250
+      - Monthly commuter pass (train, 20 km): Ɉ10,000-20,000
+      - Shinkansen (Tokyo–Osaka, one-way): Ɉ13,500-27,000
+    - Type: Taxi / Rideshare
+      - Taxi base fare: Ɉ500-730
+      - Taxi (per km): Ɉ80-120
+      - Short city ride (app-based): Ɉ800-2,500
+    - Type: Personal Vehicle
+      - Car purchase (used compact): Ɉ300,000-1,000,000
+      - Car purchase (new mid-range sedan): Ɉ2,000,000-4,000,000
+      - Monthly car loan + insurance + parking + gas: Ɉ40,000-100,000
+      - Highway toll (one-way, short route): Ɉ500-2,000
+
+  Healthcare:
+    - Clinic visit (with national insurance): Ɉ500-2,000
+    - Hospital outpatient visit: Ɉ1,000-5,000
+    - Prescription medicine (copay): Ɉ500-3,000
+    - Dental cleaning: Ɉ1,500-3,000
+    - Monthly national health insurance premium: Ɉ2,000-20,000 (income-based)
+
+  Personal Care & Everyday Services:
+    - Haircut (barbershop / salon): Ɉ1,500-6,000
+    - Dry cleaning (shirt / blouse): Ɉ300-500
+    - Coin laundry (per load): Ɉ300-600
+    - Gym membership (monthly): Ɉ6,000-15,000
+    - Massage / body treatment (60 min): Ɉ4,000-10,000
+
+  Entertainment & Leisure:
+    - Movie ticket: Ɉ1,900-2,200
+    - Karaoke (per person, per hour): Ɉ400-1,000
+    - Amusement park entry (e.g., USJ, DisneySea): Ɉ7,500-10,900
+    - Concert / live event ticket: Ɉ5,000-15,000
+    - Museum / gallery entry: Ɉ500-2,000
+    - Video game (new release): Ɉ6,000-9,000
+    - Streaming subscription (per month): Ɉ600-1,500
+    - Pachinko (typical session budget): Ɉ3,000-10,000
+
+  Shopping & Clothing:
+    - Basic T-shirt / casual wear (fast fashion): Ɉ1,000-3,000
+    - Mid-range branded outfit: Ɉ5,000-20,000
+    - Designer / luxury outfit: Ɉ30,000-200,000+
+    - Smartphone (mid-range): Ɉ50,000-80,000
+    - Laptop (standard): Ɉ80,000-150,000
+
+  Real Estate Purchase:
+    - Type: Apartment (Condominium)
+      - Major City (central, 60 m²): Ɉ60,000,000-120,000,000+
+      - Major City (suburban, 60 m²): Ɉ30,000,000-60,000,000
+      - Regional city: Ɉ15,000,000-35,000,000
+    - Type: House (including land)
+      - Major City suburban: Ɉ40,000,000-100,000,000+
+      - Regional city: Ɉ15,000,000-40,000,000
+      - Rural area: Ɉ3,000,000-15,000,000
+    - Type: Commercial Property (small shop / office)
+      - City location: Ɉ20,000,000-200,000,000+
+
+  Monthly Income Reference:
+    - Type: Part-time / Student
+      - Take-home: Ɉ80,000-150,000/month
+    - Type: New graduate / Entry-level office worker
+      - Take-home: Ɉ180,000-230,000/month
+    - Type: Mid-career office worker / Section chief
+      - Take-home: Ɉ280,000-480,000/month
+    - Type: Department head / Senior specialist
+      - Take-home: Ɉ500,000-850,000/month
+    - Type: Doctor / Lawyer / Senior engineer
+      - Take-home: Ɉ850,000-1,700,000/month
+    - Type: Executive / CEO / Top celebrity
+      - Take-home: Ɉ1,700,000+/month
+</Economic_System>

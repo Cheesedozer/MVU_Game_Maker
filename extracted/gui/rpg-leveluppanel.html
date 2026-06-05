@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Level Up Panel</title>
+</head>
+
+<body>
+    <style>
+        .mvu-lvup-container {
+            --text-primary: #e0f7fa;
+            --text-secondary: #81d4fa;
+            --accent-primary: #00e5ff;
+            --border-color: rgba(0, 229, 255, 0.3);
+            --background-card: rgba(0, 20, 40, 0.65);
+            font-family: 'Segoe UI', sans-serif;
+            color: var(--text-primary);
+            background: linear-gradient(-45deg, #001f3f, #003366, #006064, #013243);
+            background-size: 400% 400%;
+            animation: gradient-flow-lvup 30s ease infinite;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 15px;
+            width: 100%;
+            box-sizing: border-box;
+            margin: 15px 0;
+            overflow: hidden;
+        }
+
+        @keyframes gradient-flow-lvup {
+            0% {
+                background-position: 0% 50%;
+            }
+
+            50% {
+                background-position: 100% 50%;
+            }
+
+            100% {
+                background-position: 0% 50%;
+            }
+        }
+
+        leveluppanel,
+        LevelUpPanel {
+            display: none !important;
+        }
+    </style>
+    <div id="mvu-levelup-panel-widget" class="mvu-lvup-container" style="display: none;">
+        <h3 class="card-header"
+            style="margin: 0 0 10px 0; border-bottom: 1px solid var(--border-color); padding-bottom: 5px; color: var(--accent-primary);">
+            Level Up - Stat Allocation</h3>
+        <div id="mvu-levelup-rows-container">
+            <!-- Rows will be injected here -->
+            <div id="mvu-levelup-loading" style="text-align: center; color: #81d4fa; font-style: italic;">Loading stat
+                data...</div>
+        </div>
+        <div style="margin-top: 15px; text-align: center;">
+            <button id="mvu-levelup-save-btn" onclick="saveLevelUpStats()" class="tab-btn"
+                style="background: rgba(0, 0, 0, 0.3); border: 1px solid var(--border-color); border-radius: 4px; font-weight: bold; font-size: 1.1em; transition: 0.2s; display: none;">Save
+                Changes</button>
+        </div>
+    </div>
+
+    <script>
+        (function () {
+            // 1. Context and Helper Functions
+            let targetWindow = null;
+            let _ = null;
+
+            if (typeof window.getVariables === 'function') targetWindow = window;
+            else if (window.parent && typeof window.parent.getVariables === 'function') targetWindow = window.parent;
+
+            if (typeof window._ !== 'undefined') _ = window._;
+            else if (window.parent && typeof window.parent._ !== 'undefined') _ = window.parent._;
+
+            if (!targetWindow) {
+                document.getElementById('mvu-levelup-loading').textContent = "Error: Cannot access SillyTavern environment.";
+                return;
+            }
+
+            // Tuple Helpers
+            const isTuple = (v) => Array.isArray(v) && v.length >= 2 && typeof v[1] === 'string';
+            const tupleVal = (v) => isTuple(v) ? v[0] : v;
+
+            const getRaw = (obj, path, def) => {
+                if (!obj) return def;
+                if (!path) return obj;
+                if (_ && _.get) return _.get(obj, path, def);
+                const parts = path.split('.');
+                let cur = obj;
+                for (const p of parts) {
+                    if (cur === undefined || cur === null) return def;
+                    cur = cur[p];
+                }
+                return (cur === undefined || cur === null) ? def : cur;
+            };
+
+            const getV = (obj, path, def) => {
+                const val = getRaw(obj, path, def);
+                const v = isTuple(val) ? val[0] : val;
+                return typeof v === 'number' ? v : (Number(v) || def);
+            };
+
+            const getL = (obj, path, def) => {
+                const val = getRaw(obj, path, def);
+                return isTuple(val) ? val[1] : def;
+            }
+
+            // Internal State
+            let _originalStatData = null;
+            let _stagedStatData = null;
+            let _allocationState = {}; // charKey -> { pointsLeft, allocated: { Str: 0, Con: 0, etc. } }
+
+            const STATS = ['Strength', 'Constitution', 'Agility', 'Intelligence', 'Wisdom'];
+            const STAT_LABELS = {
+                'Strength': 'Str',
+                'Constitution': 'Con',
+                'Agility': 'Agi',
+                'Intelligence': 'Int',
+                'Wisdom': 'Wis'
+            };
+
+            // 2. Data Fetching
+            const fetchStatData = () => {
+                let statData = null;
+                if (!targetWindow) {
+                    console.error("[LvUpPanel] Error: targetWindow is null! Cannot fetch data.");
+                    return null;
+                }
+
+                const msgId = (typeof getCurrentMessageId === "function") ? getCurrentMessageId() : -1;
+                const context = { type: 'message', message_id: msgId };
+
+                let vars = null;
+                try {
+                    vars = targetWindow.getVariables(context);
+                } catch (e) {
+                    console.error("[LvUpPanel] getVariables context error:", e);
+                }
+
+                if (vars && vars.stat_data) {
+                    statData = vars.stat_data;
+                } else {
+                    let globalVars = null;
+                    try {
+                        globalVars = targetWindow.getVariables();
+                    } catch (e) {
+                        console.error("[LvUpPanel] getVariables global error:", e);
+                    }
+
+                    if (globalVars && globalVars.stat_data) {
+                        statData = globalVars.stat_data;
+                    } else {
+                        console.error("[LvUpPanel] Error: stat_data not found in both local and global variables.");
+                    }
+                }
+                return statData;
+            };
+
+            // 3. UI Rendering & Interactions
+            const renderPanel = () => {
+                const statData = fetchStatData();
+                if (!statData) {
+                    document.getElementById('mvu-levelup-loading').textContent = "Waiting for stat data...";
+                    return false;
+                }
+
+                // Deep clone for staging
+                _originalStatData = JSON.parse(JSON.stringify(statData));
+                _stagedStatData = JSON.parse(JSON.stringify(statData));
+                _allocationState = {};
+
+                const container = document.getElementById('mvu-levelup-rows-container');
+                container.innerHTML = '';
+
+                let foundLevelUp = false;
+
+                // Helper to check and render a character
+                const processCharacter = (charObj, charPathPrefix, charKey) => {
+                    if (!charObj) return false;
+
+                    const corePointsRaw = getRaw(charObj, 'Core-points');
+                    const corePoints = Number(isTuple(corePointsRaw) ? corePointsRaw[0] : corePointsRaw) || 0;
+
+                    if (corePoints <= 0) return false;
+
+                    // Character Names
+                    const nameRaw = getRaw(charObj, 'Name');
+                    const charName = isTuple(nameRaw) ? nameRaw[0] : (nameRaw || charKey);
+
+                    // Initialization for state tracking
+                    _allocationState[charPathPrefix] = {
+                        pointsLeft: corePoints,
+                        startPoints: corePoints,
+                        base: {
+                            'Strength': getV(charObj, 'Strength', 0),
+                            'Constitution': getV(charObj, 'Constitution', 0),
+                            'Agility': getV(charObj, 'Agility', 0),
+                            'Intelligence': getV(charObj, 'Intelligence', 0),
+                            'Wisdom': getV(charObj, 'Wisdom', 0),
+                        },
+                        allocated: { 'Strength': 0, 'Constitution': 0, 'Agility': 0, 'Intelligence': 0, 'Wisdom': 0 }
+                    };
+
+                    // Build UI Row
+                    const row = document.createElement('div');
+                    row.style.cssText = 'background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; padding: 10px; margin-bottom: 10px;';
+
+                    const header = document.createElement('div');
+                    header.className = 'nested-section-header';
+                    header.style.cssText = 'display: flex; justify-content: space-between; align-items: center; border-bottom-style: dashed; padding-bottom: 5px; margin-bottom: 8px; margin-top: 0;';
+                    header.innerHTML = `\n<strong style="color: var(--accent-primary); font-size: 1.1em; text-transform: none; letter-spacing: normal;">${charName}</strong>\n<span style="font-size: 0.9em; font-weight: bold; color: #ffab40; text-transform: none; letter-spacing: normal;">Unspent Core-points: <span id="pool-${charKey}" style="font-size: 1.2em;">${corePoints}</span></span>\n`;
+                    row.appendChild(header);
+
+                    const grid = document.createElement('div');
+                    grid.style.cssText = 'display: flex; flex-wrap: wrap; gap: 8px; justify-content: flex-start; padding-bottom: 5px;';
+
+                    STATS.forEach(stat => {
+                        const statBox = document.createElement('div');
+                        statBox.style.cssText = 'display: flex; align-items: center; background: rgba(0,0,0,0.4); border: 1px solid rgba(0,229,255,0.2); padding: 4px; border-radius: 4px; gap: 4px; min-width: 90px; justify-content: center; flex-shrink: 0; margin: 0;';
+
+                        const label = document.createElement('span');
+                        label.className = 'prop-label';
+                        label.style.cssText = 'width: 25px; font-weight: bold; font-size: 0.9em; margin-right: 4px; text-align: right;';
+                        label.textContent = STAT_LABELS[stat];
+
+                        const minusBtn = document.createElement('button');
+                        minusBtn.textContent = '-';
+                        minusBtn.style.cssText = 'background: rgba(255,0,0,0.1); border: 1px solid var(--border-color); color: #ff6b6b; padding: 0; border-radius: 3px; cursor: pointer; font-weight: bold; width: 20px; height: 20px; line-height: 18px; text-align: center;';
+                        minusBtn.onclick = () => adjustStat(charPathPrefix, charKey, stat, -1);
+
+                        const valSpan = document.createElement('span');
+                        valSpan.id = `val-${charKey}-${stat}`;
+                        valSpan.style.cssText = 'font-weight: bold; width: 26px; text-align: center; color: #fff;';
+                        valSpan.textContent = _allocationState[charPathPrefix].base[stat];
+
+                        const plusBtn = document.createElement('button');
+                        plusBtn.textContent = '+';
+                        plusBtn.style.cssText = 'background: rgba(0,255,0,0.1); border: 1px solid var(--border-color); color: #4caf50; padding: 0; border-radius: 3px; cursor: pointer; font-weight: bold; width: 20px; height: 20px; line-height: 18px; text-align: center;';
+                        plusBtn.onclick = () => adjustStat(charPathPrefix, charKey, stat, 1);
+
+                        statBox.appendChild(label);
+                        statBox.appendChild(minusBtn);
+                        statBox.appendChild(valSpan);
+                        statBox.appendChild(plusBtn);
+                        grid.appendChild(statBox);
+                    });
+
+                    row.appendChild(grid);
+                    container.appendChild(row);
+                    return true;
+                };
+
+                // Scan Mainchar
+                if (processCharacter(statData.Mainchar, 'Mainchar', 'Mainchar')) foundLevelUp = true;
+
+                // Scan Familiars
+                if (statData.Familiar) {
+                    for (const famKey in statData.Familiar) {
+                        if (processCharacter(statData.Familiar[famKey], 'Familiar.' + famKey, famKey)) foundLevelUp = true;
+                    }
+                }
+
+                if (foundLevelUp) {
+                    document.getElementById('mvu-levelup-panel-widget').style.display = 'block';
+                    document.getElementById('mvu-levelup-save-btn').style.display = 'inline-block';
+                } else {
+                    document.getElementById('mvu-levelup-panel-widget').style.display = 'none';
+                }
+                return true;
+            };
+
+            // 4. Adjust Logic
+            const adjustStat = (charPathPrefix, charKey, stat, delta) => {
+                const state = _allocationState[charPathPrefix];
+
+                // Bounds checking
+                if (delta > 0 && state.pointsLeft <= 0) return; // Not enough points
+                if (delta < 0 && state.allocated[stat] <= 0) return; // Cannot go below base
+
+                // Apply changes locally to tracking state
+                state.allocated[stat] += delta;
+                state.pointsLeft -= delta;
+
+                // Update UI
+                const currentVal = state.base[stat] + state.allocated[stat];
+                document.getElementById(`val-${charKey}-${stat}`).textContent = currentVal;
+
+                // Color coding for visual feedback
+                const elVal = document.getElementById(`val-${charKey}-${stat}`);
+                if (state.allocated[stat] > 0) elVal.style.color = 'var(--accent-primary)';
+                else elVal.style.color = 'var(--text-primary)';
+
+                document.getElementById(`pool-${charKey}`).textContent = state.pointsLeft;
+            };
+
+            // 5. Calculations based on attribute_system.txt
+            const recalculateDerivedStats = (charObj) => {
+                // Safe extraction
+                const Lvl = getV(charObj, 'Level', 1);
+                const Str = getV(charObj, 'Strength', 0);
+                const Con = getV(charObj, 'Constitution', 0);
+                const Agi = getV(charObj, 'Agility', 0);
+                const Int = getV(charObj, 'Intelligence', 0);
+                const Wis = getV(charObj, 'Wisdom', 0);
+
+                // Get Equipment Bonuses (to ensure they are added back into the persistent total)
+                let eqPAtk = 0, eqMAtk = 0, eqPDef = 0, eqMDef = 0, eqHP = 0, eqMP = 0;
+                if (charObj.Equipment) {
+                    for (const item of Object.values(charObj.Equipment)) {
+                        if (item && typeof item === 'object') {
+                            eqPAtk += Number(item.WeaponDamage || 0);
+                            eqMAtk += Number(item.WeaponMagDamage || 0);
+                            eqPDef += Number(item.ArmorPDefBonus || 0);
+                            eqMDef += Number(item.ArmorMDefBonus || 0);
+                            eqHP   += Number(item.MaxHPBonus || 0);
+                            eqMP   += Number(item.MaxMPBonus || 0);
+                        }
+                    }
+                }
+
+                // Formulas
+                const Hp_max = Math.floor(20 + (Con * 3) + (Lvl * 6)) + eqHP;
+                const Sta_max = Math.floor((50 + (Con * 3) + (Agi * 2) + Math.floor((Lvl * 5) / 3))); // Integer division implied
+                const Mp_max = Math.floor((50 + (Int * 4) + (Wis * 2) + (Lvl * 5)) / 3) + eqMP;
+
+                const P_Atk = Math.floor((Str * 2) + (Lvl * 2)) + eqPAtk;
+                const M_Atk = Math.floor((Int * 2) + (Lvl * 2)) + eqMAtk;
+                const P_Def = Math.floor((Con / 2) + (Lvl * 3)) + eqPDef;
+                const M_Def = Math.floor((Wis / 2) + (Lvl * 3)) + eqMDef;
+                const M_Ast = Math.floor((Wis * 1.5) + (Int * 0.5) + (Lvl * 1.5));
+
+                // Setting values back (preserving Tuples if they existed)
+                const setVal = (path, newVal) => {
+                    const existingRaw = getRaw(charObj, path);
+                    if (isTuple(existingRaw)) {
+                        if (_ && _.set) _.set(charObj, path, [newVal, existingRaw[1]]);
+                        else {
+                            const parts = path.split('.');
+                            let cur = charObj;
+                            for (let i = 0; i < parts.length - 1; i++) cur = cur[parts[i]];
+                            cur[parts[parts.length - 1]] = [newVal, existingRaw[1]];
+                        }
+                    } else {
+                        if (_ && _.set) _.set(charObj, path, newVal);
+                        else {
+                            const parts = path.split('.');
+                            let cur = charObj;
+                            for (let i = 0; i < parts.length - 1; i++) cur = cur[parts[i]];
+                            cur[parts[parts.length - 1]] = newVal;
+                        }
+                    }
+                };
+
+                setVal('Hp_max', Hp_max);
+                setVal('Hp_curr', Hp_max); // Fully restore on level up/allocation per standard RPG mechanics, assuming Con changes Hp
+
+                setVal('Sta_max', Sta_max);
+                setVal('Sta_curr', Sta_max);
+
+                setVal('Mp_max', Mp_max);
+                setVal('Mp_curr', Mp_max);
+
+                setVal('Physical_attack', P_Atk);
+                setVal('Magic_attack', M_Atk);
+                setVal('Physical_defense', P_Def);
+                setVal('Magic_defense', M_Def);
+                setVal('Magic_assist', M_Ast);
+            };
+
+            // 6. Final Save
+            window.saveLevelUpStats = async () => {
+                const btn = document.getElementById('mvu-levelup-save-btn');
+                btn.textContent = "Saving...";
+                btn.disabled = true;
+                btn.style.opacity = '0.5';
+
+                // Apply state to _stagedStatData
+                for (const [charPathPrefix, state] of Object.entries(_allocationState)) {
+                    // Retrieve character from root
+                    let charObj = null;
+                    if (charPathPrefix === 'Mainchar') charObj = _stagedStatData.Mainchar;
+                    else if (charPathPrefix.startsWith('Familiar.')) {
+                        const fKey = charPathPrefix.split('.')[1];
+                        charObj = _stagedStatData.Familiar[fKey];
+                    }
+
+                    if (!charObj) continue;
+
+                    // Apply base stats and core points
+                    const setVal = (path, newVal) => {
+                        const existingRaw = getRaw(charObj, path);
+                        if (isTuple(existingRaw)) {
+                            if (_ && _.set) _.set(charObj, path, [newVal, existingRaw[1]]);
+                            else charObj[path] = [newVal, existingRaw[1]]; // Simplified, works for base
+                        } else {
+                            if (_ && _.set) _.set(charObj, path, newVal);
+                            else charObj[path] = newVal;
+                        }
+                    };
+
+                    STATS.forEach(stat => {
+                        setVal(stat, state.base[stat] + state.allocated[stat]);
+                    });
+                    setVal('Core-points', state.pointsLeft);
+
+                    // Recalculate derived
+                    recalculateDerivedStats(charObj);
+                }
+
+                // Save logic using official MVU API with JSONPatch audit trail
+                try {
+                    // Wait for MVU to be ready
+                    if (typeof waitGlobalInitialized === 'function') {
+                        await waitGlobalInitialized('Mvu');
+                    }
+
+                    // Build JSONPatch operations for Core-points ONLY (audit trail)
+                    // Derived stats are recalculated internally, so we only track core-points spending
+                    const patches = [];
+                    for (const [charPathPrefix, state] of Object.entries(_allocationState)) {
+                        if (state.startPoints - state.pointsLeft > 0) {
+                            // Only create patch if core-points were spent
+                            // Convert dots to slashes for proper JSONPatch path (e.g., "Familiar.Eira" -> "Familiar/Eira")
+                            const path = `/stat_data/${charPathPrefix.replace(/\./g, '/')}/Core-points/0`;
+                            patches.push({
+                                op: "replace",
+                                path: path,
+                                value: state.pointsLeft
+                            });
+                            console.log(`[LvUpPanel] Core-points patch: ${path} = ${state.pointsLeft}`);
+                        }
+                    }
+
+                    // Get current MVU data
+                    const currentMsgId = (typeof getCurrentMessageId === 'function') ? getCurrentMessageId() : -1;
+                    const mvuData = window.Mvu.getMvuData({ type: 'message', message_id: -1 });
+
+                    // Build JSONPatch content string
+                    const jsonPatchContent = `<JSONPatch>\n${JSON.stringify(patches, null, 2)}\n</JSONPatch>`;
+                    console.log('[LvUpPanel] JSONPatch content:', jsonPatchContent);
+
+                    // Parse and apply JSONPatch using official MVU method
+                    const updatedData = await window.Mvu.parseMessage(jsonPatchContent, mvuData);
+
+                    // Apply all stat changes (base stats + derived stats) directly
+                    // This overwrites the data with our fully recalculated _stagedStatData
+                    updatedData.stat_data = _stagedStatData;
+
+                    // Save back to MVU
+                    await window.Mvu.replaceMvuData(updatedData, { type: 'message', message_id: currentMsgId });
+
+                    // Inject JSONPatch as prompt so AI can see the audit trail
+                    if (patches.length > 0) {
+                        if (typeof injectPrompts === 'function') {
+                            injectPrompts([
+                                {
+                                    id: 'levelup-panel-core-points-audit',
+                                    content: jsonPatchContent,
+                                    position: 'none',
+                                    depth: 0,
+                                    role: 'system',
+                                    should_scan: true,
+                                }
+                            ]);
+                            //console.log('[LvUpPanel] JSONPatch injected into prompt for AI visibility');
+                        }
+
+                        // Also create a chat message with the JSONPatch for visibility in chat history
+                        if (typeof createChatMessages === 'function') {
+                            const auditMessage = `<!-- SYSTEM: The user allocated Core-points via the Level-Up Panel GUI. The JSONPatch below shows the Core-points spending that was applied. The updated values are now in <CURRENT_VARIABLE_DATA>. This spending is legitimate and already completed. -->\n${jsonPatchContent}`;
+                            await createChatMessages([{
+                                role: 'system',
+                                message: auditMessage,
+                                is_hidden: true,
+                                refresh: 'all',
+                                data: { isSystem: true }
+                            }]);
+                            console.log('[LvUpPanel] JSONPatch audit trail added to chat history');
+                        }
+                    }
+
+                    console.log('[LvUpPanel] Stats saved successfully via MVU API with', patches.length, 'Core-points patches');
+                    btn.textContent = "Saved Successfully!";
+                    btn.style.background = 'rgba(100,255,100,0.2)';
+                    btn.style.borderColor = '#4caf50';
+                    btn.style.color = '#4caf50';
+                    btn.style.opacity = '1';
+
+                } catch (e) {
+                    console.error('[LvUpPanel] saveLevelUpStats failed:', e);
+                    btn.textContent = "Error Saving";
+                    btn.style.background = 'rgba(255,100,100,0.2)';
+                    btn.style.color = '#ff5252';
+                }
+            };
+
+            // Auto-init with retry
+            let retryCount = 0;
+            const attemptRender = () => {
+                const success = renderPanel();
+                if (success === false && retryCount < 30) {
+                    retryCount++;
+                    setTimeout(attemptRender, 200);
+                } else if (success === false) {
+                    console.error("[LvUpPanel] Failed to render panel after 30 attempts. stat_data could not be loaded.");
+                    document.getElementById('mvu-levelup-loading').textContent = "Error: Could not load stat_data. Please check SillyTavern console.";
+                }
+            };
+
+            // Clean up any literal <LevelUpPanel/> text nodes that might have leaked into the DOM
+            try {
+                const doc = targetWindow ? targetWindow.document : document;
+                // Run after a slight delay to ensure the chat message text is fully rendered
+                setTimeout(() => {
+                    const walk = doc.createTreeWalker(doc.body, NodeFilter.SHOW_TEXT, null, false);
+                    let n;
+                    while (n = walk.nextNode()) {
+                        if (n.nodeValue && n.nodeValue.match(/<\/?leveluppanel\s*\/?>/i)) {
+                            n.nodeValue = n.nodeValue.replace(/<\/?leveluppanel\s*\/?>/gi, '');
+                        }
+                    }
+                }, 100);
+            } catch (e) {
+                console.warn("[LvUpPanel] Failed to hide raw tags:", e);
+            }
+
+            setTimeout(attemptRender, 100);
+        })();
+    </script>
+</body>
+
+</html>

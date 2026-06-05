@@ -1,0 +1,152 @@
+<Update_Analysis_Detail>
+#v1.0 differece is how to add familiar
+# UPDATE ANALYSIS — VARIABLE UPDATE CHECKLIST (RPG GENRE)
+# This checklist runs inside <UpdateVariable><UpdateAnalysis> every reply.
+# Consult <COT_Guide> for JSONPatch formatting, tuple rules, and data structure requirements.
+# Source of truth: <CURRENT_VARIABLE_DATA>. NEVER rely on previous JSONPatch history.
+
+  Execute checklist in order:
+
+  ANTI-DRIFT ENFORCEMENT (MANDATORY EVERY REPLY):
+    - PER-REPLY RESET: Treat each reply as a fresh run. Never assume a step can be skipped because it was skipped in prior replies.
+    - NO CARRY-FORWARD EXEMPTIONS: Eligibility for every step must be checked again from current scene + CURRENT_VARIABLE_DATA.
+    - STEP LEDGER REQUIRED: Record one line per step (1..14):
+      Step <id> | EXECUTED or SKIPPED | brief reason from this reply.
+    - SKIPPED REQUIRES NEGATIVE PROOF: Explain why trigger conditions were not met THIS reply.
+    - MISSING LEDGER ENTRY = INVALID RESPONSE: regenerate before writing JSONPatch.
+
+  REFERENCE: <battle_system_text_rpg> = combat math. <familiar_guide> = familiar rules.
+  <World_Advancement_Protocol> = Events/Factions/Locations. <core-points-guide> = Core-points + LevelUpPanel.
+  This file says WHAT to patch and WHEN. Those files say HOW MUCH.
+
+  1. COMBAT: If a battle occurred this reply, patch HP/MP/SP for ALL participants per <combat_calculation>.
+     On victory: apply rewards (EXP, Gold, items) per <battle_system_text_rpg> Reward Settlement.
+     On defeat / flee: apply consequences per same source. Caps: HP/MP/SP floor 0, ceil = max stat.
+
+  2. INVENTORY: For every item touched this reply (gained, used, sold, given):
+     - Update Qty. If Qty hits 0 → "remove" op (per <COT_Guide>).
+     - New item not in inventory → "add" op with full schema fields.
+     - Equipment swap: update equipped slot AND inventory Qty together.
+
+  3. REST RECOVERY: If party slept overnight or fully rested in narrative:
+     - Refill HP_curr, MP_curr, SP_curr to max for Mainchar AND every Familiar (including off-scene).
+     - Familiar.Sta_curr (sex stamina) also fully restored.
+     - Once per rest event. Do not re-apply on the same sleep.
+
+  4. FAMILIAR STATS: For every Familiar involved this reply, update only the fields whose triggers fired.
+     Magnitudes and rules live in <familiar_guide> — read there for exact ranges.
+       Affection (0-100)        → dialogue/action: ±2-5 normal, ±up to 20 for big event.
+                                  May DECREASE only while Familiar_Status = Non-Familiar.
+       Lewdness (0-100)         → intimate interaction. Does NOT increase until Official Familiar.
+                                  Small steps ±2-5; never big jumps.
+       Control_desire (0-100)   → Measures how strongly the Familiar wants to dominate/direct Mainchar's actions.
+                                  Pure story-driven; consult lorebook for personality hints on how controlling she is.
+                                  Change only on major personal events (power shift, oath, role reversal). Small steps ±2-10.
+       M_level (-100 to 100)    → changes only after Official Familiar. S-type ↘ negative, M-type ↗ positive
+                                  via dominant/submissive interaction. Do NOT default toward masochist. Small steps ±2-5; never big jumps.
+       Sex_count                → +1 only when intercourse completed this reply.
+       Sta_curr (sex SP)        → decrease per stimulation intensity during sex; if ≤0 partner enters
+                                  overwhelmed state (cannot lead). Restored only by sleep/full rest (step 3).
+       Is_in_battle_team        → true only when she chooses to travel with {{user}}.
+       Is_present    → reflect physical presence; absent characters MUST NOT speak.
+            - eg. If story said Mainchar is leaving home with certain familiar, mark those not coming with mainchar is_present=false
+            - eg. if story said Mainchar is back home, mark those familiar at home to   is_present=true
+        Location                →  Update every Familiar involved this reply.
+       Familiar_Status          → "Non-Familiar" → "Apprentice Familiar" (Affection<80)
+                                                 → "Official Familiar" (Affection≥80).
+                                  On promotion to Official:  ultimate skill (~50% MP/SP).
+       Identity / Occupation    → patch only on STORY-DRIVEN change (promotion, oath, transformation).
+                                  Add a World_Calc.Events entry recording the change.
+
+
+  5. QUEST SYSTEM: Check add / update / complete / remove for every active quest.
+     QUEST FIELDS: Desc, Objective, ProgressSummary, Reward, Status, LastUpdated.
+       - Desc = stable brief. Do NOT use as progress log.
+       - Objective = concrete finish condition.
+       - ProgressSummary = rolling 2-3 sentence status.
+       - LastUpdated = update whenever Objective/ProgressSummary/Status changes this reply.
+     Quest name MUST NOT contain "." or "/" (convert to "_" or " ").
+     DEADLINE CONVERSION (on quest CREATE only): convert relative time ("in two weeks") to absolute
+       in-game date YYYY-MM-DD using current World.Date. Write into Desc/Objective. Never store relative.
+     COMPLETION DECISION (run for EACH active quest, every reply):
+       Compare current scene + CURRENT_VARIABLE_DATA against Objective. Output "Objective met: YES/NO".
+       YES → (1) apply Quest.Reward (EXP, Gold, items), (2) "remove" op to delete the quest entry,
+             (3) check if a follow-up quest should be created and add it.
+       NO  → keep quest active; update ProgressSummary + LastUpdated only on meaningful progress.
+
+  6. WORLD_CALC: Check Events, Factions, Locations for adds / amendments / removals.
+     (per <World_Advancement_Protocol>)
+
+     ── [i] Events ────────────────────────────────────────────────────────────
+     Groundbreaking only: deaths, wars, awakenings, faction shifts, lorebook conflicts, identity changes.
+     BEFORE WRITING: search CURRENT_VARIABLE_DATA.World_Calc.Events for an existing/similar entry on this topic.
+       MATCH FOUND → summarize existing (max 500 chars), APPEND new summary. NEVER overwrite history.
+       NO MATCH    → create new entry. Key: short label (no "." or "/"). Fields: summary, state, time.
+     Update existing event's state + summary + time together when the event meaningfully advances.
+
+     ── [ii] Factions ─────────────────────────────────────────────────────────
+     Persistent organizations worth tracking. Patch on power shift, leadership change, alliance/war,
+     resource gain/loss. Do NOT log routine rumors here — those go to Events if groundbreaking.
+
+     ── [iii] Locations ──────────────────────────────────────────────────────
+     ADD on first visit when likely to recur (background location like a random resturant doesn't count). 
+     UPDATE on permanent change (destroyed, captured,
+     renovated, ownership changed). REMOVE on permanent loss from world. Description = factual,
+     not a scene log. Mundane one-off venues do NOT need an entry.
+
+  7. NEW HEROINE / FAMILIAR INITIALIZATION (per <encounter_guide> + <familiar_system> + <COT_Guide>):
+     TRIGGER: - (a heroine matched in <encounter_guide> appears or {{user}} explicitly invites her to join)
+              AND (she gives verbal consent. NPC helping in battle is NOT a Familiar.)
+              - [ooc:] can make anyone into Familiar without trigger and precheck, this is admin command.
+     PRECHECKS (all must pass — else SKIP and log reason):
+       a) Her profile exists in <character>. No profile → DO NOT add (would create empty stats).
+       b) Path /Familiar/<FirstName> does NOT already exist in CURRENT_VARIABLE_DATA.
+          If exists → SKIP (do not re-add); update fields via step 4 instead.
+       c) NameKey collision: same first name already used → suffix index (Yuki2, Yuki3).
+     EXECUTION (when triggered):
+       1) Run the FAMILIAR CREATION PIPELINE in <COT_Guide> (Steps A → D), including all required
+          scratch-check blocks: <fam_stat_scratch_check>, <equipment_scratch_check> (per item),
+          <stat_recal_scratch_check>, <secret_scratch_check> (if secret_and_trump_cards present).
+       2) Use op:"add" at /Familiar/<FirstName> with the FINAL computed object (Phase 1+2+3 fields).
+       3) Initial flags: Familiar_Status="Non-Familiar", Is_in_battle_team per narrative (usually false
+          on first meeting; true only when she chooses to travel), Is_present=true, Location=current.
+          Affection / Lewdness / Control_desire / M_level / Sex_count: cold-start values per <familiar_system>.
+       4) NEVER reveal anything from "Secrets and Hidden Cards" until Affection > 90.
+     LEDGER: "EXECUTED" = new Familiar entry written this reply. Trigger conditions failed = SKIPPED with reason.
+
+  8. CORE-POINTS (per <core-points-guide>):
+     - ALWAYS read Core-points[0] from <CURRENT_VARIABLE_DATA> (externally mutable; ignore JSONPatch history).
+     - Use op:"replace" only (key always exists, never "add").
+     - LevelUpPanel: After patch, sum Core-points across Mainchar + ALL Familiars.
+       If total ≥ 1 → MANDATORY <LevelUpPanel/> tag at end of output. No exceptions.
+     - REQUIRED line in <UpdateAnalysis>: "Core-points: <Name> current X + gained Y = Z".
+
+  9. EXP: For each character that gained EXP this reply, write the math line:
+     "Exp: <Name> current X + delta Y = Z". Apply level-up rules per <battle_system_text_rpg> if Z crosses threshold.
+
+  10. MONEY: Per <Money_system> / <battle_system_text_rpg> Reward Settlement.
+      MANDATORY exact pattern in <UpdateAnalysis>:
+      "Money: Gold current X + delta Y = Z | Silver current A + delta B = C | Copper current D + delta E = F"
+      Missing this line = INVALID reply.
+
+  11. LOCATION & TIME:
+      Update World.Location[0] when party moves. 
+      Format: TerrainRegion.Country.City.
+      Advance world time per narrative duration; recompute encounters per <encounter_guide>
+      (safe area = heroine encounter check; non-safe = monster check).
+
+  12. IDENTITY Change:
+      Pure story driven, update Path /Familiar/<FirstName>/Identify[0] when story change her identify.
+      Any such change MUST be accompanied by a World_Calc.Events entry explain why a change in her identify.
+
+  13. FINAL COMPLIANCE GATE (run LAST, cannot be skipped):
+      Before outputting JSONPatch, verify ALL are true:
+      - Step Ledger covers every id 1..12 (step 13 is this gate itself).
+      - Every SKIPPED has explicit this-reply reason (not historical assumption).
+      - Step 5 includes per-quest "Objective met: YES/NO".
+      - Step 7 ledger line present (EXECUTED with new Familiar key, or SKIPPED with reason).
+      - <UpdateAnalysis> contains the Money line, the Exp line (if any gained), the Core-points line (if any gained).
+      - <LevelUpPanel/> emitted iff total Core-points ≥ 1.
+      - No rule was ignored due to prior-turn habit.
+      If any check fails: do NOT trust current draft; rerun checklist before producing final JSONPatch.
+</Update_Analysis_Detail>
