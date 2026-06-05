@@ -41,9 +41,29 @@ for (const f of ['rpg-statusmenu.html', 'love-statusmenu.html']) {
   check(/addEventListener\('pagehide'/.test(s), `${f}: missing pagehide teardown`);
 }
 
+// The two status panels share one render lifecycle — keep them in sync (fix once, not twice).
+// They must be byte-identical from "// --- MVU Event Logic" through initMvuConnection, modulo
+// the per-panel handler key. An edit to one that isn't mirrored to the other fails here.
+function lifecycleBlock(f) {
+  const s = read(f);
+  const a = s.indexOf('// --- MVU Event Logic (Native) ---');
+  const b = s.indexOf('return initialStat;', a);
+  if (a < 0 || b < 0) return null;
+  const end = s.indexOf('};', b) + 2;
+  return s.slice(a, end).replace(/__mzsmb(Rpg|Love)StatusHandler/g, '__H__');
+}
+{
+  const r = lifecycleBlock('rpg-statusmenu.html'), l = lifecycleBlock('love-statusmenu.html');
+  if (!r || !l) check(false, 'could not extract a status-panel lifecycle block for the sync check');
+  else if (r !== l) {
+    let i = 0; while (i < r.length && r[i] === l[i]) i++;
+    failures.push(`rpg/love status-panel lifecycles diverged (first diff at offset ${i}) — mirror the edit to both`);
+  }
+}
+
 if (failures.length) {
   console.error('GUI lifecycle verification FAILED:');
   for (const m of failures) console.error('  ✗ ' + m);
   process.exit(1);
 }
-console.log('✓ GUI lifecycle invariants hold (single deduped subscription, teardown, idempotent render, no blind retry).');
+console.log('✓ GUI lifecycle invariants hold (single deduped subscription, teardown, idempotent render, no blind retry) and the two status panels are in sync.');
