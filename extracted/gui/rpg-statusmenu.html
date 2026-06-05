@@ -1809,14 +1809,16 @@ window.recalculateDerivedStats = function(charObj) {
 
     // Default Example logic (Antigravity System)
     const Lvl = getV(charObj, 'Level', 1);
-    const Con = getV(charObj, 'Constitution', 0);
-    const Str = getV(charObj, 'Strength', 0);
-    const Agi = getV(charObj, 'Agility', 0);
-    const Int = getV(charObj, 'Intelligence', 0);
-    const Wis = getV(charObj, 'Wisdom', 0);
+    const baseCon = getV(charObj, 'Constitution', 0);
+    const baseStr = getV(charObj, 'Strength', 0);
+    const baseAgi = getV(charObj, 'Agility', 0);
+    const baseInt = getV(charObj, 'Intelligence', 0);
+    const baseWis = getV(charObj, 'Wisdom', 0);
 
-    // Flat Bonuses from Equipment
+    // Bonuses from Equipment. Direct bonuses add to derived stats; core-stat bonuses raise EFFECTIVE
+    // attributes (mirrors rpg-scheme.js recomputeCharDerived exactly so panel == saved state).
     let eqHP = 0, eqMP = 0, eqPAtk = 0, eqMAtk = 0, eqPDef = 0, eqMDef = 0;
+    let eqStr = 0, eqAgi = 0, eqCon = 0, eqInt = 0, eqWis = 0;
     if (charObj.Equipment) {
         for (const item of Object.values(charObj.Equipment)) {
             if (item && typeof item === 'object') {
@@ -1826,9 +1828,16 @@ window.recalculateDerivedStats = function(charObj) {
                 eqMAtk += Number(item.WeaponMagDamage || 0);
                 eqPDef += Number(item.ArmorPDefBonus || 0);
                 eqMDef += Number(item.ArmorMDefBonus || 0);
+                eqStr  += Number(item.StrBonus || 0);
+                eqAgi  += Number(item.AgiBonus || 0);
+                eqCon  += Number(item.ConBonus || 0);
+                eqInt  += Number(item.IntBonus || 0);
+                eqWis  += Number(item.WisBonus || 0);
             }
         }
     }
+    const Con = baseCon + eqCon, Str = baseStr + eqStr, Agi = baseAgi + eqAgi,
+          Int = baseInt + eqInt, Wis = baseWis + eqWis; // effective attributes
 
     const oldMaxHp = getV(charObj, 'Hp_max', 0);
     const oldMaxMp = getV(charObj, 'Mp_max', 0);
@@ -4101,25 +4110,13 @@ const SLOT_LIMITS = {
 };
 const ACCESSORY_SLOTS = ['Finger', 'Wrist', 'Ankle', 'Neck'];
 
-function applyEquipStats(charObj, equipData, direction) {
-    if (!charObj || !equipData || typeof equipData !== 'object') return;
-    
-    const applyBonus = (obj, key, bonusAmount) => {
-        if (obj[key] === undefined) obj[key] = 0;
-        if (Array.isArray(obj[key]) && obj[key].length > 0) {
-            obj[key][0] = Number(obj[key][0] || 0) + bonusAmount;
-        } else {
-            obj[key] = Number(obj[key] || 0) + bonusAmount;
-        }
-    };
-    
-    for (const [eqKey, charKey] of Object.entries(EQUIP_STAT_MAP)) {
-        if (equipData[eqKey] !== undefined) {
-            const bonus = Number(equipData[eqKey]) || 0;
-            if (bonus !== 0) applyBonus(charObj, charKey, direction * bonus);
-        }
-    }
-}
+// No-op by design. Equipment stat reconciliation is handled entirely by recalculateDerivedStats
+// (and rpg-scheme.js recomputeCharDerived), which fold equipped items' core-stat bonuses into
+// EFFECTIVE attributes at compute time. We deliberately no longer bake bonuses into BASE attributes
+// here: that double-counted with the recompute and silently dropped AI-granted gear (gear added in
+// chat never ran this path). Equip/unequip just move the item in/out of Equipment; the recompute
+// does the rest. Kept as a no-op so the existing call sites stay intact.
+function applyEquipStats(charObj, equipData, direction) { /* intentionally empty — see recalculateDerivedStats */ }
 
 function getEquippedInSlot(charEquipObj, slot) {
     if (!charEquipObj) return [];

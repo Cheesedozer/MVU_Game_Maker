@@ -328,19 +328,28 @@ const _setN = (obj, key, val) => {
 
 function recomputeCharDerived(c) {
   if (!c || typeof c !== 'object') return 0;
-  const Lvl = _getN(c, 'Level', 1), Con = _getN(c, 'Constitution', 0), Str = _getN(c, 'Strength', 0),
-        Agi = _getN(c, 'Agility', 0), Int = _getN(c, 'Intelligence', 0), Wis = _getN(c, 'Wisdom', 0);
+  const Lvl = _getN(c, 'Level', 1);
+  const baseStr = _getN(c, 'Strength', 0), baseAgi = _getN(c, 'Agility', 0), baseCon = _getN(c, 'Constitution', 0),
+        baseInt = _getN(c, 'Intelligence', 0), baseWis = _getN(c, 'Wisdom', 0);
 
+  // Equipment bonuses (equipped items live in c.Equipment). Direct bonuses add straight to derived
+  // stats; core-stat bonuses raise EFFECTIVE attributes so they propagate through every formula.
+  // Base attributes stay naked (AI-owned) — bonuses are never baked into them (no double-counting).
   let eqHP = 0, eqMP = 0, eqPAtk = 0, eqMAtk = 0, eqPDef = 0, eqMDef = 0;
+  let eqStr = 0, eqAgi = 0, eqCon = 0, eqInt = 0, eqWis = 0;
   if (c.Equipment && typeof c.Equipment === 'object') {
     for (const item of Object.values(c.Equipment)) {
       if (item && typeof item === 'object') {
         eqHP += Number(item.MaxHPBonus || 0); eqMP += Number(item.MaxMPBonus || 0);
         eqPAtk += Number(item.WeaponDamage || 0); eqMAtk += Number(item.WeaponMagDamage || 0);
         eqPDef += Number(item.ArmorPDefBonus || 0); eqMDef += Number(item.ArmorMDefBonus || 0);
+        eqStr += Number(item.StrBonus || 0); eqAgi += Number(item.AgiBonus || 0); eqCon += Number(item.ConBonus || 0);
+        eqInt += Number(item.IntBonus || 0); eqWis += Number(item.WisBonus || 0);
       }
     }
   }
+  const Str = baseStr + eqStr, Agi = baseAgi + eqAgi, Con = baseCon + eqCon,
+        Int = baseInt + eqInt, Wis = baseWis + eqWis; // effective attributes used by all formulas
 
   const oldMaxHp = _getN(c, 'Hp_max', 0), oldMaxMp = _getN(c, 'Mp_max', 0), oldMaxSta = _getN(c, 'Sta_max', 0);
 

@@ -301,14 +301,16 @@
             const recalculateDerivedStats = (charObj) => {
                 // Safe extraction
                 const Lvl = getV(charObj, 'Level', 1);
-                const Str = getV(charObj, 'Strength', 0);
-                const Con = getV(charObj, 'Constitution', 0);
-                const Agi = getV(charObj, 'Agility', 0);
-                const Int = getV(charObj, 'Intelligence', 0);
-                const Wis = getV(charObj, 'Wisdom', 0);
+                const baseStr = getV(charObj, 'Strength', 0);
+                const baseCon = getV(charObj, 'Constitution', 0);
+                const baseAgi = getV(charObj, 'Agility', 0);
+                const baseInt = getV(charObj, 'Intelligence', 0);
+                const baseWis = getV(charObj, 'Wisdom', 0);
 
-                // Get Equipment Bonuses (to ensure they are added back into the persistent total)
+                // Equipment bonuses. Direct bonuses add to derived stats; core-stat bonuses raise
+                // EFFECTIVE attributes (mirrors rpg-scheme.js recomputeCharDerived exactly).
                 let eqPAtk = 0, eqMAtk = 0, eqPDef = 0, eqMDef = 0, eqHP = 0, eqMP = 0;
+                let eqStr = 0, eqAgi = 0, eqCon = 0, eqInt = 0, eqWis = 0;
                 if (charObj.Equipment) {
                     for (const item of Object.values(charObj.Equipment)) {
                         if (item && typeof item === 'object') {
@@ -318,9 +320,16 @@
                             eqMDef += Number(item.ArmorMDefBonus || 0);
                             eqHP   += Number(item.MaxHPBonus || 0);
                             eqMP   += Number(item.MaxMPBonus || 0);
+                            eqStr  += Number(item.StrBonus || 0);
+                            eqAgi  += Number(item.AgiBonus || 0);
+                            eqCon  += Number(item.ConBonus || 0);
+                            eqInt  += Number(item.IntBonus || 0);
+                            eqWis  += Number(item.WisBonus || 0);
                         }
                     }
                 }
+                const Str = baseStr + eqStr, Con = baseCon + eqCon, Agi = baseAgi + eqAgi,
+                      Int = baseInt + eqInt, Wis = baseWis + eqWis; // effective attributes
 
                 // Formulas
                 const Hp_max = Math.floor(20 + (Con * 3) + (Lvl * 6)) + eqHP;

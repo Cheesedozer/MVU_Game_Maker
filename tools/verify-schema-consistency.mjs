@@ -76,6 +76,24 @@ if (!setEq(eqScript, eqLevel)) failures.push(`equipment-bonus reads differ (reco
 const eqGuide = read('extracted/lorebook/rpg-equipment-guide.txt');
 for (const f of eqScript) if (!eqGuide.includes(f)) failures.push(`equipment bonus ${f} is reconciled but not documented in rpg-equipment-guide.txt`);
 
+// (6) Derived-formula numeric parity. Extract each derived stat's RHS expression from the recompute
+// and both panels and evaluate them against a sample character — they must compute identically, or
+// the panel and the saved state drift. Numeric eval tolerates cosmetic differences (extra parens).
+const STAT_VARS = ['Hp_max', 'Sta_max', 'Mp_max', 'P_Atk', 'M_Atk', 'P_Def', 'M_Def', 'M_Ast'];
+const ENV = { Lvl: 10, Con: 15, Str: 12, Agi: 8, Int: 14, Wis: 11, eqHP: 50, eqMP: 30, eqPAtk: 7, eqMAtk: 5, eqPDef: 4, eqMDef: 3 };
+const formulaVal = (file, v) => {
+  const m = read(file).match(new RegExp('const\\s+' + v + '\\s*=\\s*([^;]+);'));
+  if (!m) return undefined;
+  try { return Function(...Object.keys(ENV), 'Math', `return (${m[1]});`)(...Object.values(ENV), Math); }
+  catch { return NaN; }
+};
+const sites = { recompute: 'extracted/schema/rpg-scheme.js', status: 'extracted/gui/rpg-statusmenu.html', levelup: 'extracted/gui/rpg-leveluppanel.html' };
+for (const v of STAT_VARS) {
+  const vals = Object.fromEntries(Object.entries(sites).map(([n, f]) => [n, formulaVal(f, v)]));
+  if (Object.values(vals).some((x) => x === undefined)) { failures.push(`derived formula ${v} not found in all three sites`); continue; }
+  if (new Set(Object.values(vals)).size !== 1) failures.push(`derived formula ${v} computes differently across sites: ${JSON.stringify(vals)}`);
+}
+
 if (failures.length) {
   console.error('Schema/derived-stat consistency FAILED:');
   for (const m of failures) console.error('  ✗ ' + m);
