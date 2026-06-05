@@ -24,6 +24,9 @@ Mainchar.(Level,Exp,Core-points,Strength,Agility,Constitution,
 Intelligence,Wisdom,Charisma,Hp_curr,Hp_max,Mp_curr,Mp_max,
 Sta_curr,Sta_max,Physical_attack,Physical_defense,Magic_attack,
 Magic_defense,Magic_assist)          #tuple<number,string>
+# NOTE: Hp_max, Mp_max, Sta_max, Physical_attack, Physical_defense, Magic_attack,
+# Magic_defense, Magic_assist are DERIVED — auto-recomputed each reply. Do NOT emit them
+# (see "DERIVED STATS — DO NOT EMIT" in <Reply_Request>). Emit base stats + *_curr only.
 
 Mainchar.Quests                      #record<string,object>
 Mainchar.Quests.{key}.(Desc,Difficulty,Reward,Status,LastUpdated,Objective,ProgressSummary) #string
